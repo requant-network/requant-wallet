@@ -1,3 +1,5 @@
+> **0.5.1 swap pause:** New offers and funding are disabled. Existing encrypted swap recovery, claims, refunds and withdrawals remain available. Do not fund old deposit addresses or invoices.
+
 # Wallet feature coverage
 
 GUI 0.5.0 pins Requant node 0.17.0 / wallet 0.10.0 (`845d0e9`). Web, Windows, macOS, Linux, Android and the extension full workspace share the same local core and UI. Public testnet only.

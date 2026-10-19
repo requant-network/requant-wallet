@@ -1,3 +1,5 @@
+> **Swaps paused (0.5.1):** New swap offers, funding, approvals and locks are disabled. Existing encrypted swap backups, status checks, claims, refunds and withdrawals remain available. Do not fund old addresses or invoices.
+
 # Requant Wallet
 
 Native **RQT** wallets for Windows, macOS, Linux, Android, the web and the Chromium extension. This family has no active Telegram Mini App or TON/jRQT account. The separate Telegram-only TON/jetton wallet is maintained in `requant-wallet-ton`.

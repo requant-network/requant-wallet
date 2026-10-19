@@ -13,6 +13,8 @@ export function protocolRequest({ method, params } = {}) {
   const amount = (v) =>
     Number.isSafeInteger(v) && v >= 1 && v <= 10000000000000;
   const maker = method?.startsWith("maker.") && method.slice(6);
+  if (maker && maker.startsWith("swap_create"))
+    throw new Error("New swaps are temporarily disabled");
   if (maker) {
     const valid =
       (maker === "info" && params.length === 0) ||

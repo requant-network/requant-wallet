@@ -11,10 +11,27 @@ test("protocol gateway accepts only bounded public operations and known Nile con
     protocolRequest({ method: "maker.info", params: [] }).target,
     "maker",
   );
+  for (const [method, params] of [
+    ["maker.swap_create", [100000000, hash, "02" + hash, address]],
+    ["maker.swap_create_ln", [100000000, hash, address]],
+    ["maker.swap_create_usdt", [100000000, hash, tron, address]],
+  ])
+    assert.throws(
+      () => protocolRequest({ method, params }),
+      /temporarily disabled/,
+    );
+  assert.equal(
+    protocolRequest({ method: "maker.swap_status", params: [hash] }).write,
+    false,
+  );
+  assert.equal(
+    protocolRequest({ method: "maker.swap_fees", params: [hash] }).write,
+    true,
+  );
   assert.equal(
     protocolRequest({
-      method: "maker.swap_create_usdt",
-      params: [100000000, hash, tron, address],
+      method: "tron./wallet/broadcasthex",
+      params: [{ transaction: "aa" }],
     }).write,
     true,
   );

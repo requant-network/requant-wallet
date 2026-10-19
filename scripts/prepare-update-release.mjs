@@ -143,7 +143,7 @@ const platform = (entry) => ({ url: entry.url, signature: entry.signature });
 const desktop = {
   version,
   notes:
-    "Atomic swaps (BTC Signet, Lightning and TRON Nile USDT), one-way payment channels and package relay across all wallets. Portable core 0.10.0; encrypted swap backups, local signing and signed platform updates.",
+    "New swaps are temporarily disabled. Existing encrypted swap backups, status checks, claims, refunds and withdrawals remain available. Payment channels and ordinary RQT transfers remain available.",
   pub_date: new Date().toISOString(),
   platforms: {
     "windows-x86_64": platform(win),

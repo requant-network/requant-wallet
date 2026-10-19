@@ -172,14 +172,10 @@ export function Swaps(p: Props) {
       protocol.list().swaps.filter((r) => r.walletId === p.wallet.id),
     ),
     [selected, setSelected] = useState<protocol.Swap | null>(null);
-  const [kind, setKind] = useState("btc"),
-    [amount, setAmount] = useState("1"),
-    [password, setPassword] = useState(""),
+  const [password, setPassword] = useState(""),
     [walletPassword, setWalletPassword] = useState(""),
     [rate, setRate] = useState("5");
-  const [info, setInfo] = useState<any>(null),
-    [serviceError, setServiceError] = useState(""),
-    [details, setDetails] = useState<any>(null),
+  const [details, setDetails] = useState<any>(null),
     [state, setState] = useState<any>(null),
     [tron, setTron] = useState<any>(null);
   const [review, setReview] = useState<any>(null),
@@ -202,26 +198,6 @@ export function Swaps(p: Props) {
     refreshRows();
   };
   const run = useRunner(p, clear);
-  useEffect(() => {
-    let valid = true;
-    protocol
-      .makerInfo()
-      .then((r) => {
-        if (valid) {
-          setInfo(r.result);
-          setServiceError("");
-        }
-      })
-      .catch(() => {
-        if (valid)
-          setServiceError(
-            "Swap service is unavailable. Existing backups and refunds remain on this device.",
-          );
-      });
-    return () => {
-      valid = false;
-    };
-  }, []);
   const choose = (r: protocol.Swap) => {
     setSelected(r);
     setDetails(null);
@@ -342,67 +318,27 @@ export function Swaps(p: Props) {
         });
       }
     });
-  const paymentAddress =
-    details?.kind === "usdt"
-      ? details.terms?.sender
-      : details?.btc_htlc?.address;
   return (
     <div className="protocol-workspace">
       {picker.input}
       <section className="panel protocol-intro">
         <div>
           <span className="eyebrow">ATOMIC SWAPS / TESTNET</span>
-          <h2>Buy RQT. Verify every step.</h2>
+          <h2>Swaps are temporarily disabled</h2>
           <p className="subtle">
-            BTC on Signet, Lightning test payments and USDT on TRON Nile.
-            Testnet assets have no monetary value.
+            New offers and funding are paused. Keep your existing swap backups.
+            You can still check a saved swap, claim funded RQT or recover funds.
           </p>
         </div>
         <ArrowLeftRight size={32} />
       </section>
       <div className="protocol-columns">
         <section className="panel">
-          <h2>New swap</h2>
+          <h2>Recover an existing swap</h2>
           <p className="subtle">
-            A local secret links both sides. Save the encrypted swap backup
-            before paying.
+            Import a saved swap or select one from your history. Do not send new
+            funds to old deposit addresses or invoices.
           </p>
-          <div className="conditions-grid">
-            <label className="field">
-              <span>Pay with</span>
-              <select value={kind} onChange={(e) => setKind(e.target.value)}>
-                <option value="btc">Bitcoin · Signet</option>
-                <option value="ln">Lightning · testnet</option>
-                <option value="usdt">USDT · TRON Nile</option>
-              </select>
-            </label>
-            <Field label="Receive (RQT)" value={amount} onChange={setAmount} />
-          </div>
-          {info && (
-            <Details
-              rows={[
-                ["Maker", "Requant testnet swap service"],
-                ["BTC price", `${info.sats_per_rqt} satoshis / RQT`],
-                [
-                  "USDT price",
-                  `${units(info.usdt?.units_per_rqt, 6)} USDT / RQT`,
-                ],
-                [
-                  "Swap range",
-                  `${units(info.min_rqt)} – ${units(info.max_rqt)} RQT`,
-                ],
-                [
-                  "TRON fees",
-                  info.usdt?.pays_fees ? "Sponsored by maker" : "Paid with TRX",
-                ],
-              ]}
-            />
-          )}
-          {serviceError && (
-            <p role="status" className="protocol-warning">
-              {serviceError}
-            </p>
-          )}
           <Field
             label="Swap backup password (12+ characters)"
             type="password"
@@ -413,32 +349,6 @@ export function Swaps(p: Props) {
             }}
           />
           <div className="action-row">
-            <Button
-              primary
-              disabled={
-                p.busy || p.wallet.meta.watchOnly || password.length < 12
-              }
-              onClick={() =>
-                run("Verifying maker offer…", async (valid) => {
-                  const row = await protocol.createSwap(
-                    p.wallet.id,
-                    kind,
-                    amount,
-                    password,
-                  );
-                  if (valid()) {
-                    setSelected(row);
-                    setDetails(row.details);
-                    setState(null);
-                    setTron(null);
-                    setReview(null);
-                    refreshRows();
-                  }
-                })
-              }
-            >
-              Get verified offer <ArrowRight size={16} />
-            </Button>
             <Button disabled={p.busy || !password} onClick={picker.pick}>
               <FileUp size={16} />
               Import swap
@@ -463,14 +373,14 @@ export function Swaps(p: Props) {
                   <strong>{r.details.receiveAmount} RQT</strong>
                   <small>
                     {r.details.kind?.toUpperCase()} ·{" "}
-                    {r.backedUp ? "Backup saved" : "Save backup before paying"}
+                    {r.backedUp ? "Backup saved" : "Recovery backup needed"}
                   </small>
                 </span>
                 <ArrowRight size={18} />
               </button>
             ))
           ) : (
-            <p className="empty">No swaps yet.</p>
+            <p className="empty">No saved swaps.</p>
           )}
         </section>
       </div>
@@ -529,73 +439,6 @@ export function Swaps(p: Props) {
                   Save encrypted swap backup
                 </Button>
               </div>
-              {!selected.backedUp ? (
-                <p className="protocol-warning">
-                  Save this backup before paying. Keep it and its password until
-                  the swap or refund is complete.
-                </p>
-              ) : (
-                details.state !== "draft" && (
-                  <div className="protocol-payment">
-                    <h3>
-                      {details.kind === "ln"
-                        ? "Pay the verified hold invoice"
-                        : "Fund the verified swap address"}
-                    </h3>
-                    <Details
-                      rows={[
-                        [
-                          "Pay",
-                          details.kind === "usdt"
-                            ? `${units(details.units, 6)} USDT · Nile`
-                            : `${details.btc_sats} satoshis · ${details.btc_network}`,
-                        ],
-                        [
-                          details.kind === "ln"
-                            ? "Lightning invoice"
-                            : "Deposit address",
-                          details.kind === "ln"
-                            ? details.bolt11
-                            : paymentAddress,
-                        ],
-                        [
-                          "Payment deadline",
-                          details.kind === "btc"
-                            ? `Bitcoin block ${details.funding_deadline}`
-                            : new Date(
-                                Number(details.funding_deadline) * 1000,
-                              ).toUTCString(),
-                        ],
-                        [
-                          "Refund from",
-                          details.kind === "usdt"
-                            ? new Date(
-                                Number(details.terms.timeout) * 1000,
-                              ).toUTCString()
-                            : details.kind === "btc"
-                              ? `Bitcoin block ${details.btc_htlc.timeout}`
-                              : "Automatic cancellation in your Lightning wallet",
-                        ],
-                      ]}
-                    />
-                    <Button
-                      disabled={p.busy}
-                      onClick={() =>
-                        run("Copying payment details…", async () => {
-                          const s =
-                            details.kind === "ln"
-                              ? details.bolt11
-                              : paymentAddress;
-                          if (platform()?.copy) await platform()!.copy!(s);
-                          else await navigator.clipboard.writeText(s);
-                        })
-                      }
-                    >
-                      Copy {details.kind === "ln" ? "invoice" : "address"}
-                    </Button>
-                  </div>
-                )
-              )}
               {tron && (
                 <Details
                   rows={[
@@ -657,14 +500,6 @@ export function Swaps(p: Props) {
                       }
                     >
                       Request TRON fees
-                    </Button>
-                    <Button
-                      disabled={p.busy || !password}
-                      onClick={() =>
-                        prepare(tron?.approved ? "lock" : "approve")
-                      }
-                    >
-                      Review {tron?.approved ? "USDT lock" : "USDT approval"}
                     </Button>
                     <Button
                       disabled={p.busy || !password}
