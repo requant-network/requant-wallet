@@ -1,9 +1,8 @@
 # Requant Wallet
 
-Native **RQT** wallets for Windows, macOS, Linux, Android, the web and the Chromium extension. This product has no active Telegram Mini App and does not add TON or jRQT accounts. The separate Telegram-only TON/jetton wallet is maintained in `requant-wallet-ton`.
+Native **RQT** wallets for Windows, macOS, Linux, Android, the web and the Chromium extension. This family has no active Telegram Mini App or TON/jRQT account. The separate Telegram-only TON/jetton wallet is maintained in `requant-wallet-ton`.
 
-
-Private Requant testnet application for Windows, macOS, Linux and Android. English interface with the approved light Requant identity. iOS is outside this milestone.
+Requant testnet application for Windows, macOS, Linux and Android. English interface with the approved light Requant identity. iOS is outside this milestone.
 
 ## Wallet 0.5.0
 
@@ -54,9 +53,9 @@ npm run tauri -- android build --ci --apk --target aarch64
 
 Android requires Java 21, SDK 36, NDK 28.2, aarch64-linux-android and the signing environment described below. The preparation script applies release signing, Requant icons, disables OS cloud backup of wallet data and prohibits cleartext network traffic.
 
-## Private builds and signing
+## Builds and signing
 
-`.github/workflows/build.yml` checks the wallet core/gateway and builds Windows x64 NSIS, universal macOS DMG, Linux x64 AppImage/Debian and Android ARM64 APK. Artifacts remain in this private repository for 30 days. A successful installer build does not establish device/runtime testing on that platform.
+`.github/workflows/build.yml` checks the wallet core/gateway and builds Windows x64 NSIS, universal macOS DMG, Linux x64 AppImage/Debian and Android ARM64 APK. Build artifacts are retained for 30 days; access follows the repository visibility. A successful installer build does not establish device/runtime testing on that platform.
 
 Android signing uses repository secrets `ANDROID_KEY_BASE64` and `ANDROID_KEY_PASSWORD`; the fixed alias is `requant-wallet`. Keep an offline copy of this key and password outside Git. Android updates must use the same signing key.
 
@@ -85,3 +84,7 @@ Consensus/address/transaction rules are pinned to Requant `ef789d4`, with the po
 The design images contain illustrative data. The application loads actual node responses and shows empty/offline states rather than fabricated funds.
 
 Spending conditions: local 2-of-2, HTLC, delayed revocation and revocable HTLC builders; secret/hash and public-key tools; verified-parent offline payment files, CLI-compatible partial signatures and cosigning. Reviews show activation heights, absolute/relative locks, anyone-can-pay and secret disclosure. Revocable conditions and anyone-can-pay activate at testnet height 4700. Testnet swaps (BTC on Signet, Lightning, USDT on TRON Nile), one-way payment channels and package relay are built on these primitives.
+
+## License
+
+Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE). The vendored Requant source in `vendor/` is Apache-2.0 as well; IBM Plex Sans is under the SIL Open Font License 1.1.
