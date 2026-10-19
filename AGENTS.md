@@ -1,5 +1,6 @@
 # Requant Wallet
 
+- Product boundary: native RQT only. Desktop, Android, web and the extension remain this wallet family. There is no active Telegram Mini App; TON/jRQT belongs only to the separate Telegram wallet. Preserve existing swaps/channels and recovery data.
 - Keep Windows, macOS, Linux and Android in this one private repository. iOS is outside the current milestone.
 - Public UI, error messages, accessibility text and project branding are English. Preserve the original Requant identity and avoid Russian geographic branding or MagnetGate assets.
 - Read design/SPEC.md and inspect the approved concept images before UI implementation. Keep conceptual and approved states explicit.

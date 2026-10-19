@@ -1,4 +1,11 @@
-# Requant Telegram Wallet
+# Retired native RQT Telegram Mini App
+
+**Retired on 2026-10-19.** The native RQT wallet family has no Telegram Mini App. This directory is retained for provenance and recovery; do not deploy its bot, export API or application. New web builds exclude the Telegram HTML entry and SDK. `sw-telegram.js` is now a retirement worker that removes only old app caches and unregisters itself; it never deletes wallet storage.
+
+The old launch URL displays maintenance. Keep the old encrypted backups, IndexedDB and server volume. Restore RQT in the separate web/desktop/Android/extension wallet. The new Telegram-only TON/jetton product lives in the private `requant-wallet-ton` repository, on a separate origin and database, without a bridge.
+
+## Historical implementation (inactive)
+
 
 The Mini App uses the same `web/src/App.tsx`, protocol screens, service and Rust/WASM wallet core as Web Wallet 0.5.0. It adds a Telegram platform adapter; there is no separate signing implementation or reduced feature list. Public UI is English, with the approved Signal / IBM Plex Sans design.
 

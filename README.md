@@ -1,10 +1,13 @@
 # Requant Wallet
 
+Native **RQT** wallets for Windows, macOS, Linux, Android, the web and the Chromium extension. This product has no active Telegram Mini App and does not add TON or jRQT accounts. The separate Telegram-only TON/jetton wallet is maintained in `requant-wallet-ton`.
+
+
 Private Requant testnet application for Windows, macOS, Linux and Android. English interface with the approved light Requant identity. iOS is outside this milestone.
 
 ## Wallet 0.5.0
 
-One interface and Requant wallet 0.5.0 portable core across web, Windows, macOS, Linux, Android, the browser extension's full wallet workspace and the Telegram Mini App (@requant_wallet_bot).
+One interface and Requant wallet 0.5.0 portable core across web, Windows, macOS, Linux, Android, the browser extension's full wallet workspace.
 
 - Create and restore a 24-word HD wallet, encrypted backups, watch-only imports and legacy encrypted/plain key imports (plain keys are encrypted before storage).
 - Receive/change addresses, recovery scanning, address counts from 1 to 100,000, paged address lists and deposit-list exports.
