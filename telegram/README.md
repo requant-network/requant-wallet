@@ -1,5 +1,7 @@
 # Retired native RQT Telegram Mini App
 
+> **Historical adapter only.** New swaps are paused across the native RQT wallet family. Do not launch this retired Mini App or create/fund a swap. Keep original swap backups and recover them in the current RQT wallet. The descriptions below record historical behavior.
+
 **Retired on 2026-10-19.** The native RQT wallet family has no Telegram Mini App. This directory is retained for provenance and recovery; do not deploy its bot, export API or application. New web builds exclude the Telegram HTML entry and SDK. `sw-telegram.js` is now a retirement worker that removes only old app caches and unregisters itself; it never deletes wallet storage.
 
 The old launch URL displays maintenance. Keep the old encrypted backups, IndexedDB and server volume. Restore RQT in the separate web/desktop/Android/extension wallet. The new Telegram-only TON/jetton product lives in the private `requant-wallet-ton` repository, on a separate origin and database, without a bridge.
@@ -9,7 +11,7 @@ The old launch URL displays maintenance. Keep the old encrypted backups, Indexed
 
 The Mini App uses the same `web/src/App.tsx`, protocol screens, service and Rust/WASM wallet core as Web Wallet 0.5.0. It adds a Telegram platform adapter; there is no separate signing implementation or reduced feature list. Public UI is English, with the approved Signal / IBM Plex Sans design.
 
-Production bot: `@requant_wallet_bot`. Launch URL: `https://requant.network/telegram-wallet/`. Use the bot's **Open Wallet** menu button, or `/start`. The separate profile-level **Launch app** and `?startapp` link require Main Mini App configuration in BotFather; Bot API menu setup works independently.
+Retired bot: `@requant_wallet_bot` is maintenance-only. Do not launch or configure its historical wallet entry. The separate profile-level **Launch app** and `?startapp` link require Main Mini App configuration in BotFather; Bot API menu setup works independently.
 
 ## Functions
 

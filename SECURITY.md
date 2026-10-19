@@ -26,6 +26,6 @@ private key or password; reproduce with a new test wallet.
 ## Scope notes
 
 Balances and history come from the selected node or the public wallet gateway, which the wallet trusts
-for chain state (there is no light client). Swap and channel protocols run against the test-network
-maker and services; their design is in
+for chain state (there is no light client). New swaps are disabled in the wallet and new offers are blocked by the public wallet gateway.
+Existing swap recovery and payment channels use the test-network services; their protocol reference is in
 [SWAPS.md](https://github.com/requant-network/requant/blob/main/SWAPS.md).
