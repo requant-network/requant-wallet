@@ -29,7 +29,6 @@ import {
 } from "lucide-react";
 import QRCode from "qrcode";
 import Conditions from "./Conditions";
-import { Swaps } from "./ProtocolUI";
 import Channels from "./Channels";
 import Packages from "./Packages";
 import * as api from "./service";
@@ -44,7 +43,6 @@ type View =
   | "coins"
   | "activity"
   | "offline"
-  | "swaps"
   | "channels"
   | "packages"
   | "conditions"
@@ -65,7 +63,6 @@ const nav: { id: View; name: string; icon: typeof Wallet }[] = [
   { id: "coins", name: "Coins", icon: Layers },
   { id: "activity", name: "Activity", icon: Activity },
   { id: "offline", name: "Offline signing", icon: ShieldCheck },
-  { id: "swaps", name: "Swap recovery", icon: ArrowRight },
   { id: "channels", name: "Channels", icon: ShieldCheck },
   { id: "packages", name: "Packages", icon: FileUp },
   { id: "conditions", name: "Conditions", icon: ShieldCheck },
@@ -83,10 +80,6 @@ const titles: Record<View, [string, string]> = {
   offline: [
     "Offline signing",
     "Prepare online. Sign offline. Broadcast online.",
-  ],
-  swaps: [
-    "Swap recovery",
-    "New swaps are paused. Manage existing backups and recover funds.",
   ],
   channels: [
     "Payment channels",
@@ -315,7 +308,7 @@ export default function App() {
     !!offlineReview ||
     view === "send" ||
     view === "offline" ||
-    ["conditions", "swaps", "channels", "packages"].includes(view) ||
+    ["conditions", "channels", "packages"].includes(view) ||
     !!password ||
     !!source;
   const walletUpdate = useWebUpdates(
@@ -1835,14 +1828,6 @@ export default function App() {
                 )}
               </>
             )}
-            {view === "swaps" && (
-              <Swaps
-                wallet={current}
-                reset={lockTick}
-                busy={!!busy}
-                task={task}
-              />
-            )}
             {view === "channels" && (
               <Channels
                 wallet={current}
@@ -2209,7 +2194,6 @@ export default function App() {
               { id: "addresses", name: "Addresses & deposit lists" },
               { id: "coins", name: "Coins & consolidation" },
               { id: "offline", name: "Offline signing" },
-              { id: "swaps", name: "Swap recovery" },
               { id: "channels", name: "Channels" },
               { id: "packages", name: "Packages" },
               { id: "conditions", name: "Spending conditions" },

@@ -1,8 +1,6 @@
-> **0.5.1 swap pause:** New offers and funding are disabled. Existing encrypted swap recovery, claims, refunds and withdrawals remain available. Do not fund old deposit addresses or invoices.
-
 # Wallet feature coverage
 
-GUI 0.5.1 pins Requant node 0.17.0 / wallet 0.10.0 (`845d0e9`). Web, Windows, macOS, Linux, Android and the extension full workspace share the same local core and UI. Public testnet only.
+GUI 0.5.2 pins Requant node 0.17.0 / wallet 0.10.0 (`845d0e9`). Web, Windows, macOS, Linux, Android and the extension full workspace share the same local core and UI. Public testnet only.
 
 | Core wallet operation | All wallet interfaces |
 | --- | --- |
@@ -17,18 +15,13 @@ GUI 0.5.1 pins Requant node 0.17.0 / wallet 0.10.0 (`845d0e9`). Web, Windows, ma
 | condition | 2-of-2, HTLC, delayed revocation and revocable HTLC builders/import/export |
 | spend-condition | Claim/refund/revoke selection, anyone-can-pay, confirmed-source verification and lock review |
 | cosign | CLI-compatible partial files, first-signature verification, local second signature |
-| new swap offers / buy / buy-ln / buy-usdt | Disabled in the signing core; the public gateway also rejects new offers. No new funding workflow is exposed. |
-| swap status / claim | Live maker status, independently checked HTLC and amount, verified RQT parents, local signing and explicit secret-revealing claim review |
-| swap approval / lock | Disabled; do not fund old addresses or invoices |
-| existing swap refund / withdraw | Local TRON refund/withdraw signing against the saved Nile terms; BTC refund exported as signed hex |
-| swap fees | Request maker energy/TRX support and explicitly return unused lent TRX |
 | channel open / accept / fund | Public proposal files, pre-signed timed refunds, server acceptance and verified-source funding with explicit review |
 | channel pay / receive / close / refund / show | Increasing cumulative payment states, CLI-compatible state files, local second signature, maturity checks, live deposit status and rollback rejection |
 | broadcast FILE FILE... | Verified signed package import/review/export, parent-first order, source-owner/value checks, duplicate-spend rejection, package relay (2–25 transactions, max 200 kB) |
 
-The CLI maintainer `sign-release` and maker staking/liquidity commands are operator tooling. The wallet exposes existing swap recovery and one-way payment channels; it does not add unsupported mainnet markets, reverse swaps, custodial BTC balances or yield products. A Bitcoin refund is exported for submission through a Bitcoin Signet node, matching the upstream CLI. The package tool accepts already-signed parents and children; it does not invent a fee-bump composer.
+The CLI maintainer `sign-release` is operator tooling. The wallet exposes one-way payment channels and verified signed package relay. The package tool accepts already-signed parents and children.
 
-Basic conditions activate at height 1400, revocable conditions and anyone-can-pay at 4700. RQT claims require matching amounts, verified parent bytes and adequate time before the maker's refund. New protocol screens block automatic update activation while open. Swap backups contain an authenticated encrypted payload with a separately password-wrapped random key; swap secrets are not derived from the wallet recovery phrase. Channel files contain no private keys, and stored cumulative payment totals cannot move backwards.
+Basic conditions activate at height 1400, revocable conditions and anyone-can-pay at 4700. Protocol screens block automatic update activation while open. Channel files contain no private keys, and stored cumulative payment totals cannot move backwards.
 
 CLI partial files lacking parent bytes can be enriched online, exported, and then reviewed/cosigned offline. Secret-bearing unsigned/partial/signed HTLC files reveal their preimage; the interface calls this out before export and broadcast. Secrets and passwords remain ephemeral; encrypted wallet files and signed broadcast records use existing local storage.
 

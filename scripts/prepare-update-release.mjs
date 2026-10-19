@@ -143,7 +143,7 @@ const platform = (entry) => ({ url: entry.url, signature: entry.signature });
 const desktop = {
   version,
   notes:
-    "New swaps are temporarily disabled. Existing encrypted swap backups, status checks, claims, refunds and withdrawals remain available. Payment channels and ordinary RQT transfers remain available.",
+    "A focused RQT wallet workspace with local signing, encrypted backups, payment channels and package relay.",
   pub_date: new Date().toISOString(),
   platforms: {
     "windows-x86_64": platform(win),

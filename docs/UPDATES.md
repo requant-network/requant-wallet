@@ -1,5 +1,3 @@
-> **0.5.1 swap pause:** New offers and funding are disabled. Existing encrypted swap recovery, claims, refunds and withdrawals remain available. Do not fund old deposit addresses or invoices.
-
 # Wallet updates
 
 Version 0.4.0 bootstraps updates. Earlier desktop/Android/ZIP builds must be replaced once; they have no updater to receive this release.

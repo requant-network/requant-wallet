@@ -1,5 +1,3 @@
-> **Swaps paused (0.5.1):** New swap offers, funding, approvals and locks are disabled. Existing encrypted swap backups, status checks, claims, refunds and withdrawals remain available. Do not fund old addresses or invoices.
-
 # Requant Wallet
 
 Native **RQT** wallets for Windows, macOS, Linux, Android, the web and the Chromium extension. This family has no active Telegram Mini App or TON/jRQT account. The separate Telegram-only TON/jetton wallet is maintained in `requant-wallet-ton`.
@@ -85,7 +83,7 @@ Consensus/address/transaction rules are pinned to Requant `ef789d4`, with the po
 
 The design images contain illustrative data. The application loads actual node responses and shows empty/offline states rather than fabricated funds.
 
-Spending conditions: local 2-of-2, HTLC, delayed revocation and revocable HTLC builders; secret/hash and public-key tools; verified-parent offline payment files, CLI-compatible partial signatures and cosigning. Reviews show activation heights, absolute/relative locks, anyone-can-pay and secret disclosure. Revocable conditions and anyone-can-pay activate at testnet height 4700. One-way payment channels, package relay and recovery of existing testnet swaps use these primitives. New swap offers, approvals and locks are disabled; additional swap markets are outside the current roadmap.
+Spending conditions: local 2-of-2, HTLC, delayed revocation and revocable HTLC builders; secret/hash and public-key tools; verified-parent offline payment files, CLI-compatible partial signatures and cosigning. Reviews show activation heights, absolute/relative locks, anyone-can-pay and secret disclosure. Revocable conditions and anyone-can-pay activate at testnet height 4700. One-way payment channels and package relay use these primitives.
 
 ## License
 
