@@ -260,6 +260,13 @@ pub fn execute(op: &str, input: &str) -> Result<String> {
         return Err("Request is too large.".into());
     }
     let v: Value = serde_json::from_str(input).map_err(|_| "Invalid local wallet request.")?;
+    if matches!(op, "swapDraft" | "swapOffer")
+        || (op == "swapTronSign" && matches!(v["action"].as_str(), Some("approve" | "lock")))
+    {
+        return Err(
+            "New swaps are temporarily disabled. Existing swap recovery remains available.".into(),
+        );
+    }
     let net = Network::test();
     if matches!(
         op,
@@ -685,3 +692,6 @@ pub fn execute(op: &str, input: &str) -> Result<String> {
 pub fn run(op: &str, input: &str) -> std::result::Result<String, JsValue> {
     execute(op, input).map_err(|e| JsValue::from_str(&e))
 }
+
+#[cfg(test)]
+mod protocol_tests;

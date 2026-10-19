@@ -12,10 +12,6 @@ export default defineConfig({
     strictPort: true,
     proxy: {
       "/wallet-api": { target: "https://requant.network", changeOrigin: true },
-      "/telegram-wallet-api": {
-        target: "http://127.0.0.1:3313",
-        changeOrigin: true,
-      },
     },
     fs: { allow: [".."] },
   },
@@ -26,8 +22,6 @@ export default defineConfig({
     rollupOptions: {
       input: {
         wallet: resolve("web/index.html"),
-        telegram: resolve("web/telegram.html"),
-        export: resolve("web/export.html"),
       },
     },
   },

@@ -1,6 +1,6 @@
 //! Unfunded synthetic chains only. No network calls, wallet funds or production secrets.
+use super::execute;
 use ed25519_dalek::SigningKey;
-use requant_browser_core::execute;
 use requant_consensus::{
     address::{address, parse_address},
     params::Network,
@@ -19,7 +19,12 @@ fn call(op: &str, v: Value) -> Value {
 }
 fn refuse(op: &str, v: Value) {
     assert!(
-        execute(op, &v.to_string()).is_err(),
+        (if op == "swapOffer" {
+            super::swaps::execute(op, &v).map(|r| r.to_string())
+        } else {
+            execute(op, &v.to_string())
+        })
+        .is_err(),
         "{op} accepted forged data"
     );
 }
@@ -37,8 +42,12 @@ fn envelope(v: Value) -> String {
 fn info() -> Value {
     json!({"rqt_network":"test","btc_network":"signet","btc_pubkey":btc::public_key(&[2;32]).unwrap().to_string(),"sats_per_rqt":1000,"min_rqt":1,"max_rqt":10_000_000_000u64,"lightning":true,"usdt":{"network":"nile","htlc":tron::DEPLOYMENTS[0].htlc,"token":tron::DEPLOYMENTS[0].usdt,"receiver":tron::to_base58(&tron::address_of(&[2;32]).unwrap()),"units_per_rqt":100000,"pays_fees":true}})
 }
+// Fixture construction only. This private module is not a callable production API.
+fn historical(op: &str, v: Value) -> Value {
+    super::swaps::execute(op, &v).unwrap()
+}
 fn draft(kind: &str, file: &str) -> Value {
-    call(
+    historical(
         "swapDraft",
         json!({"file":file,"kind":kind,"amount":"1","password":PASS,"info":envelope(info())}),
     )
@@ -62,7 +71,7 @@ fn encrypted_swaps_check_offer_and_refuse_tampered_backups() {
     let (f, _) = wallet(1);
     let d = draft("btc", &f);
     let offer = btc_offer(&d);
-    let saved = call(
+    let saved = historical(
         "swapOffer",
         json!({"record":d["record"],"password":PASS,"offer":envelope(offer.clone()),"now":"10000"}),
     );
@@ -211,7 +220,7 @@ fn lightning_offer_binds_hash_amount_network_and_expiry() {
         envelope(json!({"id":hex::encode([7;32]),"btc_sats":1000,"bolt11":invoice(h,hrp,time)}))
     };
     let args = json!({"record":d["record"],"password":PASS,"offer":offer(&h,"lntbs10u",100000),"now":"100000"});
-    let accepted = call("swapOffer", args.clone());
+    let accepted = historical("swapOffer", args.clone());
     assert_eq!(accepted["details"]["funding_deadline"], "100600");
     for wrong in [
         offer(&[0; 32], "lntbs10u", 100000),
@@ -242,15 +251,28 @@ fn usdt_uses_known_contract_local_signing_and_refund_deadlines() {
         timeout: 143200,
     };
     let offer = json!({"id":hex::encode([6;32]),"htlc":tron::DEPLOYMENTS[0].htlc,"terms":t.json(),"funding_deadline":107200});
-    let saved = call(
+    let saved = historical(
         "swapOffer",
         json!({"record":d["record"],"password":PASS,"offer":envelope(offer.clone()),"now":"100000"}),
     );
     assert_eq!(saved["details"]["terms"]["sender"], req["params"][2]);
     let block=json!({"blockID":hex::encode([7;32]),"block_header":{"raw_data":{"number":1234,"timestamp":100000000}}}).to_string();
     let args = json!({"record":saved["record"],"password":PASS,"action":"lock","balance":"100000","state":"0","approved":true,"block":block,"now":"100000"});
-    let signed = call("swapTronSign", args.clone());
-    assert_eq!(signed["review"]["maxFee"], "60 TRX");
+    for action in ["approve", "lock"] {
+        let mut blocked = args.clone();
+        blocked["action"] = json!(action);
+        assert!(execute("swapTronSign", &blocked.to_string())
+            .unwrap_err()
+            .contains("temporarily disabled"));
+    }
+    // Already funded swaps can still sign a refund after the on-chain timeout.
+    let mut refund = args.clone();
+    refund["action"] = json!("refund");
+    refund["state"] = json!("1");
+    refund["now"] = json!("143200");
+    refund["block"] = json!(json!({"blockID":hex::encode([7;32]),"block_header":{"raw_data":{"number":1234,"timestamp":143200000}}}).to_string());
+    let signed = call("swapTronSign", refund);
+    assert_eq!(signed["review"]["action"], "refund");
     assert!(!signed["hex"].as_str().unwrap().is_empty());
     let mut early = args.clone();
     early["action"] = json!("refund");
@@ -419,4 +441,18 @@ fn package_verifies_parents_order_owner_values_and_duplicate_spends() {
         json!({"package":json!([hex::encode(a.encode()),hex::encode(a.encode())]).to_string(),"parents":parents}),
     );
     let _ = parse_address(&net, &address(&net, &owner)).unwrap();
+}
+
+#[test]
+fn public_api_disables_new_swaps_before_keys_or_funding_are_used() {
+    for (op, args) in [
+        ("swapDraft", json!({})),
+        ("swapOffer", json!({})),
+        ("swapTronSign", json!({"action":"approve"})),
+        ("swapTronSign", json!({"action":"lock"})),
+    ] {
+        assert!(execute(op, &args.to_string())
+            .unwrap_err()
+            .contains("temporarily disabled"));
+    }
 }

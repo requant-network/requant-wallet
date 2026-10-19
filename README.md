@@ -1,10 +1,12 @@
 # Requant Wallet
 
+Native **RQT** wallets for Windows, macOS, Linux, Android, the web and the Chromium extension. This family has no active Telegram Mini App or TON/jRQT account. The separate Telegram-only TON/jetton wallet is maintained in `requant-wallet-ton`.
+
 Requant testnet application for Windows, macOS, Linux and Android. English interface with the approved light Requant identity. iOS is outside this milestone.
 
-## Wallet 0.5.0
+## Wallet 0.5.1
 
-One interface and Requant wallet 0.5.0 portable core across web, Windows, macOS, Linux, Android, the browser extension's full wallet workspace and the Telegram Mini App (@requant_wallet_bot).
+One interface and Requant wallet 0.5.0 portable core across web, Windows, macOS, Linux, Android, the browser extension's full wallet workspace.
 
 - Create and restore a 24-word HD wallet, encrypted backups, watch-only imports and legacy encrypted/plain key imports (plain keys are encrypted before storage).
 - Receive/change addresses, recovery scanning, address counts from 1 to 100,000, paged address lists and deposit-list exports.
@@ -81,7 +83,7 @@ Consensus/address/transaction rules are pinned to Requant `ef789d4`, with the po
 
 The design images contain illustrative data. The application loads actual node responses and shows empty/offline states rather than fabricated funds.
 
-Spending conditions: local 2-of-2, HTLC, delayed revocation and revocable HTLC builders; secret/hash and public-key tools; verified-parent offline payment files, CLI-compatible partial signatures and cosigning. Reviews show activation heights, absolute/relative locks, anyone-can-pay and secret disclosure. Revocable conditions and anyone-can-pay activate at testnet height 4700. Testnet swaps (BTC on Signet, Lightning, USDT on TRON Nile), one-way payment channels and package relay are built on these primitives.
+Spending conditions: local 2-of-2, HTLC, delayed revocation and revocable HTLC builders; secret/hash and public-key tools; verified-parent offline payment files, CLI-compatible partial signatures and cosigning. Reviews show activation heights, absolute/relative locks, anyone-can-pay and secret disclosure. Revocable conditions and anyone-can-pay activate at testnet height 4700. One-way payment channels and package relay use these primitives.
 
 ## License
 

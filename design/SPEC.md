@@ -61,10 +61,10 @@ All visible copy is English. Public testnet copy: Testnet coins have no value. N
 
 The generated PNGs are design concepts with illustrative data. The source baseline is `danifest751/requant@aad4772`; the visual identity comes from the approved Requant website concept. Prompts and the reused brand SVG are versioned alongside the PNGs. The Signal layout adapts to all five targets, with native file and sharing behavior preserved.
 
-Spending conditions: local 2-of-2, HTLC, delayed revocation and revocable HTLC builders; secret/hash and public-key tools; verified-parent offline payment files, CLI-compatible partial signatures and cosigning. Reviews show activation heights, absolute/relative locks, anyone-can-pay and secret disclosure. Revocable conditions and anyone-can-pay activate at testnet height 4700. Swaps and payment channels use these primitives in the dedicated protocol workspaces below.
+Spending conditions: local 2-of-2, HTLC, delayed revocation and revocable HTLC builders; secret/hash and public-key tools; verified-parent offline payment files, CLI-compatible partial signatures and cosigning. Reviews show activation heights, absolute/relative locks, anyone-can-pay and secret disclosure. Revocable conditions and anyone-can-pay activate at testnet height 4700. Payment channels use these primitives in the dedicated protocol workspaces below.
 
 ## Protocol workspaces — 2026-10-12
 
-Swaps, Channels and Packages follow the approved Signal palette and IBM Plex Sans. Desktop uses the existing sidebar and padded white panels; mobile exposes the same tools through Tools and stacks panels. No new brand direction.
+Channels and Packages follow the approved Signal palette and IBM Plex Sans. Desktop uses the existing sidebar and padded white panels; mobile exposes the same tools through Tools and stacks panels. No new brand direction.
 
-Swap payment details are displayed after encrypted backup export. Network labels stay explicit (Bitcoin Signet, Lightning test payments, TRON Nile, Requant testnet). Show full addresses, exact decimal amounts, funding/refund deadlines and fee caps. Every broadcast requires a visible review. Channel funding requires a verified server-signed refund; payment states show the cumulative amount. Package review shows every transaction and the combined fee. Signed TRON transactions persist before relay and remain visible when submission status is unknown.
+Every broadcast requires a visible review. Show full addresses, exact decimal amounts, funding/refund deadlines and fee caps. Channel funding requires a verified server-signed refund; payment states show the cumulative amount. Package review shows every transaction and the combined fee.
