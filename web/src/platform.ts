@@ -13,6 +13,12 @@ export type Platform = {
   core?: (op: string, args: Record<string, unknown>) => Promise<any>;
   rpc?: (method: string, params: unknown[]) => Promise<string>;
   protocol?: (method: string, params: unknown[]) => Promise<string>;
+  recastRelay?: (
+    url: string,
+    token: string,
+    action: string,
+    approval?: unknown,
+  ) => Promise<any>;
   lock: () => void;
   download: (text: string, name: string) => Promise<boolean>;
   pick?: (max: number) => Promise<{ text: string; name: string } | null>;
@@ -26,6 +32,12 @@ export type Platform = {
     back: () => void;
     canGoBack: boolean;
     blocked: boolean;
+    recastRelay?: (
+      url: string,
+      token: string,
+      action: string,
+      approval?: unknown,
+    ) => Promise<any>;
     lock: () => void;
   }) => () => void;
 };

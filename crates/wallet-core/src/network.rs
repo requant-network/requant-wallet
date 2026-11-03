@@ -193,3 +193,126 @@ impl Node {
         Err("The chain changed while updating. Refresh the wallet.".into())
     }
 }
+
+/// A wallet approval relay is not a generic HTTP or transaction-signing proxy.
+pub fn validate_recast_relay(
+    endpoint: &str,
+    token: &str,
+    action: &str,
+    approval: &Option<Value>,
+) -> Result<()> {
+    validate_endpoint(endpoint)?;
+    let url = url::Url::parse(endpoint).map_err(|_| "Invalid ReCast URL.")?;
+    let parts: Vec<_> = url.path().split('/').collect();
+    let hex = |s: &str, n: usize| {
+        s.len() == n
+            && s.bytes()
+                .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+    };
+    if parts.len() < 5
+        || parts[parts.len() - 4..parts.len() - 1] != ["v1", "wallet", "pairings"]
+        || !hex(parts[parts.len() - 1], 64)
+        || !hex(token, 64)
+        || !["read", "approve", "reject"].contains(&action)
+    {
+        return Err("Invalid ReCast relay request.".into());
+    }
+    if action == "approve" {
+        let value = approval.as_ref().ok_or("Missing wallet approval.")?;
+        if value.as_object().map(|m| m.len()) != Some(2)
+            || !value["public_key"]
+                .as_str()
+                .map(|s| hex(s, 64))
+                .unwrap_or(false)
+            || !value["signature"]
+                .as_str()
+                .map(|s| hex(s, 128))
+                .unwrap_or(false)
+        {
+            return Err("Invalid wallet approval fields.".into());
+        }
+    } else if approval.is_some() {
+        return Err("Unexpected relay payload.".into());
+    }
+    Ok(())
+}
+pub async fn recast_relay(
+    endpoint: String,
+    token: String,
+    action: String,
+    approval: Option<Value>,
+) -> Result<Value> {
+    validate_recast_relay(&endpoint, &token, &action, &approval)?;
+    let client = Client::builder()
+        .timeout(Duration::from_secs(10))
+        .redirect(reqwest::redirect::Policy::none())
+        .build()
+        .map_err(|_| "Cannot initialize wallet connection.")?;
+    let mut authorization = reqwest::header::HeaderValue::from_str(&format!("Pairing {token}"))
+        .map_err(|_| "Invalid connection token.")?;
+    authorization.set_sensitive(true);
+    let request = if action == "read" {
+        client.get(&endpoint)
+    } else {
+        client.post(format!("{endpoint}/{action}"))
+    };
+    let mut request = request.header(reqwest::header::AUTHORIZATION, authorization);
+    if let Some(value) = approval {
+        request = request.json(&value);
+    }
+    let mut response = request
+        .send()
+        .await
+        .map_err(|_| "ReCast connection is unavailable.")?;
+    if !response.status().is_success() {
+        return Err("ReCast rejected or expired this request. Connect again.".into());
+    }
+    let mut bytes = Vec::new();
+    while let Some(chunk) = response
+        .chunk()
+        .await
+        .map_err(|_| "ReCast connection interrupted.")?
+    {
+        if bytes.len() + chunk.len() > 16384 {
+            return Err("ReCast response is too large.".into());
+        }
+        bytes.extend_from_slice(&chunk);
+    }
+    if bytes.is_empty() {
+        return Ok(json!({}));
+    }
+    serde_json::from_slice(&bytes).map_err(|_| "Invalid ReCast response.".into())
+}
+
+#[cfg(test)]
+mod recast_tests {
+    use super::*;
+    #[test]
+    fn relay_rejects_arbitrary_actions_and_secret_payloads() {
+        let url = format!(
+            "https://recast.example/reCast/v1/wallet/pairings/{}",
+            "ab".repeat(32)
+        );
+        let token = "cd".repeat(32);
+        assert!(validate_recast_relay(&url, &token, "read", &None).is_ok());
+        for action in ["claim", "sendtx", "delete"] {
+            assert!(validate_recast_relay(&url, &token, action, &None).is_err());
+        }
+        for bad in [
+            url.replace("https://", "http://"),
+            url.replace("/pairings/", "/admin/"),
+            format!("{url}?secret=1"),
+            format!("{url}#fragment"),
+        ] {
+            assert!(validate_recast_relay(&bad, &token, "read", &None).is_err());
+        }
+        assert!(validate_recast_relay(
+            &url,
+            &token,
+            "approve",
+            &Some(json!({"public_key":"11".repeat(32),"signature":"22".repeat(64)}))
+        )
+        .is_ok());
+        assert!(validate_recast_relay(&url,&token,"approve",&Some(json!({"public_key":"11".repeat(32),"signature":"22".repeat(64),"password":"never-network"}))).is_err());
+    }
+}

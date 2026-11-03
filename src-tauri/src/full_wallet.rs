@@ -284,3 +284,13 @@ pub async fn full_wallet_protocol(method: String, params: Value) -> Result<Strin
             .await?;
     Ok(json!({"result":result,"error":null}).to_string())
 }
+
+#[tauri::command]
+pub async fn full_recast_relay(
+    endpoint: String,
+    token: String,
+    action: String,
+    approval: Option<Value>,
+) -> Result<Value> {
+    requant_wallet_core::network::recast_relay(endpoint, token, action, approval).await
+}

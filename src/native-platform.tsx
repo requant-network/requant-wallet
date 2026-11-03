@@ -39,6 +39,8 @@ export function installNativePlatform() {
           input: JSON.stringify(args),
         }),
       ),
+    recastRelay: (endpoint, token, action, approval) =>
+      invoke("full_recast_relay", { endpoint, token, action, approval }),
     rpc: (method, params) => invoke("full_wallet_rpc", { method, params }),
     protocol: (method, params) =>
       invoke("full_wallet_protocol", { method, params }),

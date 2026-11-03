@@ -86,3 +86,7 @@ Spending conditions: local 2-of-2, HTLC, delayed revocation and revocable HTLC b
 ## License
 
 Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE). The vendored Requant source in `vendor/` is Apache-2.0 as well; IBM Plex Sans is under the SIL Open Font License 1.1.
+
+## ReCast wallet sign-in
+
+Version 0.5.1 adds typed ReCast login and channel approvals in Website connections across web, native and extension UI. See [ReCast Connect](docs/RECAST_CONNECT.md) for the approval protocol, tests and release requirements.

@@ -2,6 +2,7 @@ mod channels;
 mod conditions;
 mod packages;
 mod protocols;
+mod recast;
 mod swaps;
 use ed25519_dalek::SigningKey;
 use requant_consensus::{
@@ -261,6 +262,9 @@ pub fn execute(op: &str, input: &str) -> Result<String> {
     }
     let v: Value = serde_json::from_str(input).map_err(|_| "Invalid local wallet request.")?;
     let net = Network::test();
+    if op == "recastApprove" {
+        return recast::approve(&v).map(|r| r.to_string());
+    }
     if matches!(
         op,
         "condition" | "secret" | "pubkey" | "contractPrepare" | "contractInspect" | "contractSign"
