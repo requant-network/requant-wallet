@@ -13,7 +13,7 @@ Version 0.4.0 bootstraps updates. Earlier desktop/Android/ZIP builds must be rep
 Run `.github/workflows/build.yml` and extension checks for the release commits. Download artifacts from these exact successful runs into a fresh directory (including `requant-web-wallet` and the extension ZIP). Inspect the builds and run their tests before signing.
 
 ```
-node scripts/prepare-update-release.mjs --input=/absolute/artifacts --output=/absolute/new-release --key=/absolute/private-wallet-updater.key --commit=FULL_REVIEWED_SHA
+node scripts/prepare-update-release.mjs --input=/absolute/artifacts --output=/absolute/new-release --key=/absolute/private-wallet-updater.key --commit=FULL_REVIEWED_SHA --extension-commit=FULL_REVIEWED_EXTENSION_SHA
 ```
 
 The private updater key is outside Git and remains local. CI does not receive it. Keep a secure backup; changing it breaks the installed updater trust chain. The public verification key is in `src-tauri/tauri.conf.json`; version binding is required. Never embed GitHub credentials in clients or make the repositories public for updates.

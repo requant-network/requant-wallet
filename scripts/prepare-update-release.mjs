@@ -25,10 +25,11 @@ if (
   !args["--input"] ||
   !args["--output"] ||
   !args["--key"] ||
-  !/^[a-f0-9]{40}$/.test(args["--commit"] || "")
+  !/^[a-f0-9]{40}$/.test(args["--commit"] || "") ||
+  !/^[a-f0-9]{40}$/.test(args["--extension-commit"] || "")
 )
   throw new Error(
-    "Use --input=DIR --output=DIR --key=PRIVATE_KEY_PATH --commit=REVIEWED_SHA",
+    "Use --input=DIR --output=DIR --key=PRIVATE_KEY_PATH --commit=REVIEWED_SHA --extension-commit=REVIEWED_EXTENSION_SHA",
   );
 const version = JSON.parse(readFileSync("package.json", "utf8")).version;
 const input = resolve(args["--input"]),
@@ -171,7 +172,7 @@ try {
     directory: staging,
     product: "extension",
     version,
-    commit: args["--commit"],
+    commit: args["--extension-commit"],
     key: args["--key"],
     output: join(output, "extension.json"),
   });
