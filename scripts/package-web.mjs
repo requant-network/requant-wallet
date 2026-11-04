@@ -1,5 +1,8 @@
-import { readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { readdirSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { createHash } from "node:crypto";
+// The native RQT product has no Telegram Mini App. Retain only a retirement
+// worker for older installations; encrypted wallet storage is never touched.
+rmSync("dist-web/telegram-web-app.js", { force: true });
 const files = [];
 function walk(dir) {
   for (const entry of readdirSync(`dist-web${dir}`, { withFileTypes: true })) {
@@ -25,17 +28,9 @@ writeFileSync(
   `const CACHE='requant-wallet-${revision}';const FILES=${JSON.stringify(files)};\n` +
     readFileSync("web/service-worker.js", "utf8"),
 );
-const telegramFiles = files.map((path) =>
-  path === "/wallet/telegram.html"
-    ? "/telegram-wallet/"
-    : path === "/wallet/export.html"
-      ? "/telegram-wallet/export.html"
-      : path,
-);
 writeFileSync(
   "dist-web/sw-telegram.js",
-  `const CACHE='requant-telegram-wallet-${revision}';const FILES=${JSON.stringify(telegramFiles)};\n` +
-    readFileSync("web/service-worker.js", "utf8"),
+  readFileSync("web/retire-telegram-worker.js", "utf8"),
 );
 writeFileSync(
   "dist-web/version.json",

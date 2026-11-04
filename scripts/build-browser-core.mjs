@@ -16,6 +16,7 @@ if (process.platform === "darwin") {
   )
     env.CC_wasm32_unknown_unknown = "/opt/homebrew/opt/llvm/bin/clang";
 }
+const cargoTarget = resolve(env.CARGO_TARGET_DIR || "target");
 for (const [command, args] of [
   [
     "cargo",
@@ -32,7 +33,7 @@ for (const [command, args] of [
   [
     "wasm-bindgen",
     [
-      "target/wasm32-unknown-unknown/release/requant_browser_core.wasm",
+      `${cargoTarget}/wasm32-unknown-unknown/release/requant_browser_core.wasm`,
       "--target",
       "web",
       "--out-dir",

@@ -50,6 +50,8 @@ export async function external(
   method: string,
   params: unknown[] = [],
 ): Promise<{ raw: string; result: any }> {
+  if (method.startsWith("maker.swap_create"))
+    throw new Error("New swaps are temporarily disabled.");
   let raw: string;
   if (platform()?.protocol) raw = await platform()!.protocol!(method, params);
   else {
@@ -100,38 +102,13 @@ export async function createSwap(
   amount: string,
   password: string,
 ) {
-  await api.info();
-  const info = await makerInfo();
-  const draft = await api.core("swapDraft", {
-    file: api.wallet(walletId).file,
-    kind,
-    amount,
-    password,
-    info: info.raw,
-  });
-  let row = await putSwap({
-    id: crypto.randomUUID(),
-    walletId,
-    record: draft.record,
-    details: draft.details,
-    backedUp: false,
-  });
-  const request = JSON.parse(draft.request);
-  const offer = await external(`maker.${request.method}`, request.params);
-  const now =
-    kind === "usdt"
-      ? BigInt(
-          (await external("tron./wallet/getnowblock", [{}])).result.block_header
-            .raw_data.timestamp,
-        ) / 1000n
-      : BigInt(Math.floor(Date.now() / 1000));
-  const checked = await api.core("swapOffer", {
-    record: row.record,
-    password,
-    offer: offer.raw,
-    now: now.toString(),
-  });
-  return putSwap({ ...row, ...checked });
+  void walletId;
+  void kind;
+  void amount;
+  void password;
+  throw new Error(
+    "New swaps are temporarily disabled. Existing swap recovery remains available.",
+  );
 }
 export async function inspectSwap(row: Swap, password: string) {
   return api.core("swapInspect", { record: row.record, password });
@@ -140,7 +117,7 @@ export async function status(row: Swap, password: string) {
   const details = await inspectSwap(row, password);
   if (details.state === "draft")
     throw new Error(
-      "This quote was not completed. Create a new swap before paying.",
+      "This quote was not completed. New swaps are temporarily disabled; do not fund it.",
     );
   const response = await external("maker.swap_status", [details.id]);
   const checked = await api.core("swapStatus", {
@@ -229,6 +206,8 @@ export async function tronPrepare(
   });
 }
 export async function tronSend(row: Swap, signed: any) {
+  if (!["refund", "withdraw", "returnFees"].includes(signed.review?.action))
+    throw new Error("New swap funding is temporarily disabled.");
   const outbox = [
     { ...signed, status: "Broadcast status unknown", created: Date.now() },
     ...(row.outbox ?? []).filter((x) => x.txid !== signed.txid),

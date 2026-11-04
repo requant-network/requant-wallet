@@ -148,3 +148,65 @@ test("Telegram has its own offline entry and scope; export links keep the export
     assert.equal(await response, "cached-public-file");
   }
 });
+
+test("retired Mini App removes only its own cache and registration while preserving every wallet database", async () => {
+  const source = await readFile(
+    new URL("../web/retire-telegram-worker.js", import.meta.url),
+    "utf8",
+  );
+  const listeners = {},
+    deleted = [],
+    navigated = [];
+  let unregistered = 0;
+  vm.runInNewContext(source, {
+    URL,
+    self: {
+      addEventListener: (type, handler) => {
+        listeners[type] = handler;
+      },
+      skipWaiting: async () => {},
+      registration: {
+        unregister: async () => {
+          unregistered++;
+        },
+      },
+      clients: {
+        matchAll: async () => [
+          {
+            url: "https://requant.network/telegram-wallet/",
+            navigate: async (url) => navigated.push(url),
+          },
+          {
+            url: "https://requant.network/wallet/",
+            navigate: async () =>
+              assert.fail("RQT web wallet must not be navigated"),
+          },
+        ],
+      },
+    },
+    caches: {
+      keys: async () => [
+        "requant-telegram-wallet-old",
+        "requant-wallet-current",
+        "unrelated-cache",
+      ],
+      delete: async (key) => deleted.push(key),
+    },
+    indexedDB: new Proxy(
+      {},
+      {
+        get: () => assert.fail("Retirement must never access wallet databases"),
+      },
+    ),
+  });
+  let activation;
+  listeners.activate({
+    waitUntil: (p) => {
+      activation = p;
+    },
+  });
+  await activation;
+  assert.deepEqual(deleted, ["requant-telegram-wallet-old"]);
+  assert.deepEqual(navigated, ["/telegram-wallet/"]);
+  assert.equal(unregistered, 1);
+});
