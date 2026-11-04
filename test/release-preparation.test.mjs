@@ -11,6 +11,7 @@ import {
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 const version = JSON.parse(readFileSync("package.json", "utf8")).version;
 const cli = resolve("node_modules/@tauri-apps/cli/tauri.js");
 test("publisher requires the separate extension source commit before touching output", () => {
@@ -85,6 +86,25 @@ test("publisher binds each product to its own reviewed source commit", () => {
     );
     const walletCommit = "ab".repeat(20),
       extensionCommit = "cd".repeat(20);
+    writeFileSync(
+      join(input, "build-manifest.json"),
+      JSON.stringify({
+        product: "Requant Wallet Extension",
+        network: "testnet",
+        version,
+        sourceCommit: extensionCommit,
+        sha256: createHash("sha256")
+          .update(
+            readFileSync(
+              join(
+                input,
+                `Requant-Wallet-Extension_${version}_chromium-testnet.zip`,
+              ),
+            ),
+          )
+          .digest("hex"),
+      }),
+    );
     const result = spawnSync(
       process.execPath,
       [
@@ -115,6 +135,56 @@ test("publisher binds each product to its own reviewed source commit", () => {
       readFileSync(join(output, "SHA256SUMS.txt"), "utf8"),
       new RegExp(bundleName.replaceAll(".", "\\.")),
     );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+test("publisher rejects mismatched extension CI provenance before output or signing", () => {
+  const dir = mkdtempSync(join(tmpdir(), "rq-release-provenance-"));
+  try {
+    const archive = join(
+      dir,
+      `Requant-Wallet-Extension_${version}_chromium-testnet.zip`,
+    );
+    writeFileSync(archive, "public fixture archive");
+    const valid = {
+      product: "Requant Wallet Extension",
+      network: "testnet",
+      version,
+      sourceCommit: "cd".repeat(20),
+      sha256: createHash("sha256").update(readFileSync(archive)).digest("hex"),
+    };
+    for (const changed of [
+      { sourceCommit: "ab".repeat(20) },
+      { version: "0.0.1" },
+      { network: "mainnet" },
+      { product: "different product" },
+      { sha256: "00".repeat(32) },
+    ]) {
+      writeFileSync(
+        join(dir, "build-manifest.json"),
+        JSON.stringify({ ...valid, ...changed }),
+      );
+      const output = join(dir, "output");
+      const result = spawnSync(
+        process.execPath,
+        [
+          "scripts/prepare-update-release.mjs",
+          `--input=${dir}`,
+          `--output=${output}`,
+          "--key=unused-test-path",
+          `--commit=${"ab".repeat(20)}`,
+          `--extension-commit=${valid.sourceCommit}`,
+        ],
+        { encoding: "utf8" },
+      );
+      assert.notEqual(result.status, 0);
+      assert.match(
+        result.stderr,
+        /Extension CI provenance or ZIP hash mismatch/,
+      );
+      assert.equal(existsSync(output), false);
+    }
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
