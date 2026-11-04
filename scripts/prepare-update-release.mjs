@@ -1,3 +1,6 @@
+import { signRelease } from "./signed-release.mjs";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import {
   readdirSync,
   readFileSync,
@@ -18,8 +21,15 @@ const args = Object.fromEntries(
     return [arg.slice(0, i), arg.slice(i + 1)];
   }),
 );
-if (!args["--input"] || !args["--output"] || !args["--key"])
-  throw new Error("Use --input=DIR --output=DIR --key=PRIVATE_KEY_PATH");
+if (
+  !args["--input"] ||
+  !args["--output"] ||
+  !args["--key"] ||
+  !/^[a-f0-9]{40}$/.test(args["--commit"] || "")
+)
+  throw new Error(
+    "Use --input=DIR --output=DIR --key=PRIVATE_KEY_PATH --commit=REVIEWED_SHA",
+  );
 const version = JSON.parse(readFileSync("package.json", "utf8")).version;
 const input = resolve(args["--input"]),
   output = resolve(args["--output"]);
@@ -120,17 +130,14 @@ const android = {
   versionCode,
   ...copy(androidSource, `Requant-Wallet_${version}_android-arm64.apk`),
 };
-const extension = {
-  version,
-  ...copy(
-    one(
-      (f) =>
-        basename(f) ===
-        `Requant-Wallet-Extension_${version}_chromium-testnet.zip`,
-    ),
-    `Requant-Wallet-Extension_${version}_chromium-testnet.zip`,
+copy(
+  one(
+    (f) =>
+      basename(f) ===
+      `Requant-Wallet-Extension_${version}_chromium-testnet.zip`,
   ),
-};
+  `Requant-Wallet-Extension_${version}_chromium-testnet.zip`,
+);
 const webDir = one((f) => f.endsWith("/requant-web-wallet/index.html"));
 const webZip = join(output, `Requant-Web-Wallet_${version}_testnet.zip`);
 const zip = spawnSync("zip", ["-q", "-r", webZip, "."], {
@@ -154,7 +161,33 @@ const desktop = {
     "linux-x86_64-deb": platform(deb),
   },
 };
-for (const [name, data] of Object.entries({ desktop, android, extension }))
+const staging = mkdtempSync(join(tmpdir(), "requant-release-"));
+try {
+  copyFileSync(
+    join(output, `Requant-Wallet-Extension_${version}_chromium-testnet.zip`),
+    join(staging, `Requant-Wallet-Extension_${version}_chromium-testnet.zip`),
+  );
+  signRelease({
+    directory: staging,
+    product: "extension",
+    version,
+    commit: args["--commit"],
+    key: args["--key"],
+    output: join(output, "extension.json"),
+  });
+  signRelease({
+    directory: resolve(webDir, ".."),
+    product: "web",
+    version,
+    commit: args["--commit"],
+    key: args["--key"],
+    output: join(output, `Requant-Web-Wallet_${version}_testnet.rqweb`),
+  });
+  files.push(join(output, `Requant-Web-Wallet_${version}_testnet.rqweb`));
+} finally {
+  rmSync(staging, { recursive: true, force: true });
+}
+for (const [name, data] of Object.entries({ desktop, android }))
   writeFileSync(
     join(output, `${name}.json`),
     JSON.stringify(data, null, 2) + "\n",
@@ -169,5 +202,5 @@ writeFileSync(
     .join("\n") + "\n",
 );
 console.log(
-  `Prepared signed wallet ${version}: ${files.length} artifacts. Publish immutable files before atomically replacing the three update feeds.`,
+  `Prepared signed wallet ${version}: ${files.length} artifacts. Publish immutable files before atomically replacing the signed extension feed and native update feeds.`,
 );

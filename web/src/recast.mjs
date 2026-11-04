@@ -101,3 +101,24 @@ export async function relay(
     throw new Error(value.error?.message ?? "ReCast request failed.");
   return value;
 }
+
+export async function comparisonCode(r) {
+  if (
+    !hex32(r.id) ||
+    !["test", "regtest"].includes(r.network) ||
+    !["login", "channel"].includes(r.intent) ||
+    !Number.isSafeInteger(r.expires_at) ||
+    r.expires_at <= 0 ||
+    typeof r.origin !== "string" ||
+    /[\r\n]/.test(r.origin)
+  )
+    throw new Error("Invalid wallet comparison request.");
+  const text = `ReCast pairing comparison v1\n${r.origin}\n${r.network}\n${r.id}\n${r.intent}\n${r.expires_at}`;
+  const hash = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(text),
+  );
+  return (new DataView(hash).getUint32(0) % 1000000)
+    .toString()
+    .padStart(6, "0");
+}

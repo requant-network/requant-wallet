@@ -1,0 +1,5 @@
+{
+  "public_key": "RWTOMbWPfcnj0AeNi1+MYbNqQuyoowRQLAAVXIW9QwARP1b9Ic23/83b",
+  "manifest": "{\"schema\":1,\"purpose\":\"requant-release-v1\",\"product\":\"web\",\"network\":\"test\",\"version\":\"0.5.3\",\"min_client\":\"0.5.3\",\"source_commit\":\"abababababababababababababababababababab\",\"files\":[{\"path\":\"index.html\",\"bytes\":2,\"sha256\":\"2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df\"}]}",
+  "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUT01iV1BmY25qMElQSEI1Qld4Sk0wcEJCZFJ4TVJiR2NvK05EdTRoY2FaR2tqNWhobVRnM0IvSmRBRU50a01wdHVXbGczYUJMNGpybXVKVzhHb3l1d280K3RGbzVsWndvPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkzNzkxMjg2CWZpbGU6bWFuaWZlc3QuanNvbgl2ZXJzaW9uOjAuNS4zClpocnJIYXg2UWpWL0xwamZ6aXorRFFxNjR6OWg2WXJkYXh4RjVqRGNNbU1hTndKOGt2SkhLenhKZ3hScXRlcHF2WWlIKzZCd1g2Q3BvT01tOFZtRUN3PT0K"
+}

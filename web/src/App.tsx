@@ -1998,6 +1998,17 @@ export default function App() {
             )}
             {view === "settings" && (
               <div className="settings-grid">
+                {!platform() && (
+                  <section className="panel">
+                    <h2>Verify the web wallet independently</h2>
+                    <p>
+                      This browser page trusts its hosting server. To run a
+                      signed web release independently, open its .rqweb file in
+                      your already installed Requant desktop wallet under
+                      Settings → Signed web wallet.
+                    </p>
+                  </section>
+                )}
                 <section className="panel">
                   <h2>Backup & recovery</h2>
                   <button

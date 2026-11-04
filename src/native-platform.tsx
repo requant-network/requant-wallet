@@ -4,17 +4,9 @@ import { open as openFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { type Platform, type UpdateProps } from "../web/src/platform";
+import VerifiedWeb from "./VerifiedWeb";
 import useWalletUpdates from "./WalletUpdates";
-import { native } from "./api";
-let dialog = false;
-async function withDialog<T>(fn: () => Promise<T>) {
-  dialog = true;
-  try {
-    return await fn();
-  } finally {
-    dialog = false;
-  }
-}
+import { native, fileDialog as withDialog, fileDialogOpen } from "./api";
 function Updates(props: UpdateProps) {
   const value = useWalletUpdates({
     locked: props.locked,
@@ -23,7 +15,12 @@ function Updates(props: UpdateProps) {
     onInstalling: props.installing,
     showDetails: props.details,
   });
-  return value;
+  return (
+    <>
+      {value}
+      {props.details && <VerifiedWeb blocked={props.blocked} />}
+    </>
+  );
 }
 export function installNativePlatform() {
   if (!native) throw new Error("Start the native Requant Wallet application.");
@@ -51,7 +48,7 @@ export function installNativePlatform() {
     share: /Android/i.test(navigator.userAgent)
       ? (address) => invoke("share_full_address", { address })
       : undefined,
-    fileDialogOpen: () => dialog,
+    fileDialogOpen: () => fileDialogOpen,
     download: async (text, name) =>
       withDialog(async () => {
         const path = await save({

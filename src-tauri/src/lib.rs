@@ -15,6 +15,7 @@ use tauri::{Manager, State};
 use tauri_plugin_wallet_share::WalletShareExt;
 use zeroize::Zeroizing;
 mod full_wallet;
+mod verified_web;
 #[derive(Clone)]
 struct Plan {
     wallet: String,
@@ -205,6 +206,7 @@ async fn prepare_transfer(
     }
     let selected = transfer::select(&coins, value, fee, allow_pending)?;
     node.verify_outputs(&selected, &wallet.owner).await?;
+    let fee = transfer::reviewed_fee(&selected, value, fee)?;
     let quote = hex::encode(crypto::random::<16>()?);
     let mut rt = access(&state)?;
     rt.store.touch(&id)?;
@@ -364,6 +366,11 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_clipboard_manager::init())
+        .register_uri_scheme_protocol("wallet-verified", |ctx, request| {
+            let state = ctx.app_handle().state::<Mutex<verified_web::VerifiedWeb>>();
+            let guard = state.lock().expect("verified asset state poisoned");
+            verified_web::serve(&request, &guard.assets)
+        })
         .setup(|app| {
             let directory = app.path().app_data_dir()?;
             #[cfg(debug_assertions)]
@@ -377,6 +384,9 @@ pub fn run() {
                         directory
                     }
                 });
+            app.manage(Mutex::new(verified_web::VerifiedWeb::new(
+                directory.clone(),
+            )));
             let store = Store::open(directory.clone()).map_err(std::io::Error::other)?;
             let full =
                 full_wallet::FullWalletStore::open(directory).map_err(std::io::Error::other)?;
@@ -388,6 +398,8 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            verified_web::open_verified_web,
+            verified_web::verified_web_active,
             full_wallet::full_state_load,
             full_wallet::full_state_save,
             full_wallet::portable_wallet,

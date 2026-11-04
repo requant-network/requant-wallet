@@ -68,3 +68,21 @@ test("relay carries only public approvals, omits credentials and refuses redirec
     ),
   );
 });
+
+test("comparison code matches Go/Rust vectors and binds the local approval purpose", async () => {
+  const { comparisonCode } = await import("../web/src/recast.mjs");
+  const r = {
+    origin: "https://recast.example",
+    network: "test",
+    id: "ab".repeat(32),
+    intent: "login",
+    expires_at: 1800000300,
+  };
+  assert.equal(await comparisonCode(r), "228355");
+  assert.equal(await comparisonCode({ ...r, intent: "channel" }), "950127");
+  assert.notEqual(
+    await comparisonCode({ ...r, id: "cd".repeat(32) }),
+    "228355",
+  );
+  await assert.rejects(comparisonCode({ ...r, network: "main" }));
+});

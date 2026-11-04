@@ -1,7 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import * as api from "./service";
 import { platform } from "./platform";
-import { connection, relay, validateRequest } from "./recast.mjs";
+import {
+  comparisonCode,
+  connection,
+  relay,
+  validateRequest,
+} from "./recast.mjs";
 export default function RecastConnect({
   wallet,
   reset,
@@ -26,12 +31,17 @@ export default function RecastConnect({
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [done, setDone] = useState(false);
+  const [expectedCode, setExpectedCode] = useState(""),
+    [enteredCode, setEnteredCode] = useState("");
   useEffect(() => {
     epoch.current++;
     setPassword("");
     setReview(undefined);
     setSource(undefined);
     setDone(false);
+    setExpectedCode("");
+    setEnteredCode("");
+    setBusy(false);
   }, [reset, wallet.id]);
   useEffect(() => {
     const clear = () => {
@@ -41,6 +51,7 @@ export default function RecastConnect({
     return () => document.removeEventListener("visibilitychange", clear);
   }, []);
   async function load() {
+    const current = epoch.current;
     setError("");
     setBusy(true);
     try {
@@ -49,20 +60,36 @@ export default function RecastConnect({
         await relay(next, "read", undefined, platform()),
         next,
       );
+      const code = await comparisonCode(request);
+      if (
+        request.comparison_code !== undefined &&
+        request.comparison_code !== code
+      )
+        throw new Error("Wallet comparison code does not match this request.");
+      if (current !== epoch.current) return;
       setSource(next);
+      setExpectedCode(code);
+      setEnteredCode("");
       setReview(request);
       setDone(request.approved === true);
       setInput("");
     } catch (e) {
-      setError(
-        e instanceof Error ? e.message : "Could not read ReCast request.",
-      );
+      if (current === epoch.current)
+        setError(
+          e instanceof Error ? e.message : "Could not read ReCast request.",
+        );
     } finally {
-      setBusy(false);
+      if (current === epoch.current) setBusy(false);
     }
   }
   async function approve() {
-    if (!source || !review) return;
+    if (
+      !source ||
+      !review ||
+      enteredCode !== expectedCode ||
+      expectedCode.length !== 6
+    )
+      return;
     const current = epoch.current;
     setBusy(true);
     setError("");
@@ -76,6 +103,7 @@ export default function RecastConnect({
           request: review,
           source_origin: source.origin,
           now: Math.floor(Date.now() / 1000),
+          comparison_code: enteredCode,
         },
       );
       if (current !== epoch.current || document.hidden)
@@ -98,6 +126,7 @@ export default function RecastConnect({
       );
     } finally {
       setPassword("");
+      setEnteredCode("");
       setBusy(false);
     }
   }
@@ -155,6 +184,22 @@ export default function RecastConnect({
             Expires: {new Date(review.expires_at * 1000).toLocaleTimeString()}
           </p>
           <label className="field">
+            <span>Code shown in ReCast</span>
+            <input
+              inputMode="numeric"
+              autoComplete="off"
+              maxLength={6}
+              value={enteredCode}
+              onChange={(e) =>
+                setEnteredCode(e.target.value.replace(/[^0-9]/g, ""))
+              }
+            />
+          </label>
+          <p>
+            Enter the six-digit code from ReCast. Reject this request if it
+            differs.
+          </p>
+          <label className="field">
             <span>Local wallet password</span>
             <input
               type="password"
@@ -166,7 +211,13 @@ export default function RecastConnect({
           <div className="actions">
             <button
               className="button primary"
-              disabled={busy || !password || wallet.meta.watchOnly}
+              disabled={
+                busy ||
+                !password ||
+                wallet.meta.watchOnly ||
+                enteredCode !== expectedCode ||
+                expectedCode.length !== 6
+              }
               onClick={() => void approve()}
             >
               Approve in wallet
