@@ -6,7 +6,11 @@ const activity = join(
   "app/src/main/java/network/requant/wallet/MainActivity.kt",
 );
 // Fail if Tauri changes the activity layout instead of shipping an unprotected window.
-if (!readFileSync(activity, "utf8").includes("class MainActivity"))
+if (
+  !/class MainActivity\s*:\s*TauriActivity\s*\(/.test(
+    readFileSync(activity, "utf8"),
+  )
+)
   throw new Error("Unexpected Android activity template.");
 copyFileSync("src-tauri/android/MainActivity.kt", activity);
 const gradle = join(base, "app/build.gradle.kts");

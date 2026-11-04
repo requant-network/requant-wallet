@@ -66,6 +66,7 @@ test("Android preparation protects the activity before first frame and fails clo
       }
       assert.equal(run.status, 0, run.stderr);
       const kotlin = readFileSync(activity, "utf8");
+      assert.match(kotlin, /class MainActivity\s*:\s*TauriActivity\s*\(/);
       assert.ok(
         kotlin.indexOf("FLAG_SECURE") < kotlin.indexOf("super.onCreate"),
       );
