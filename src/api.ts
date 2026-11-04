@@ -7,7 +7,7 @@ import { readBackup } from "./backups.mjs";
 export const native = isTauri();
 export const android = /Android/i.test(navigator.userAgent);
 export let fileDialogOpen = false;
-async function fileDialog<T>(fn: () => Promise<T>): Promise<T> {
+export async function fileDialog<T>(fn: () => Promise<T>): Promise<T> {
   fileDialogOpen = true;
   try {
     return await fn();

@@ -1,6 +1,18 @@
 import { readFileSync, writeFileSync, copyFileSync } from "node:fs";
 import { join } from "node:path";
 const base = "src-tauri/gen/android";
+const activity = join(
+  base,
+  "app/src/main/java/network/requant/wallet/MainActivity.kt",
+);
+// Fail if Tauri changes the activity layout instead of shipping an unprotected window.
+if (
+  !/class MainActivity\s*:\s*TauriActivity\s*\(/.test(
+    readFileSync(activity, "utf8"),
+  )
+)
+  throw new Error("Unexpected Android activity template.");
+copyFileSync("src-tauri/android/MainActivity.kt", activity);
 const gradle = join(base, "app/build.gradle.kts");
 let source = readFileSync(gradle, "utf8");
 source = source

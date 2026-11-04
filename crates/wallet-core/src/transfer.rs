@@ -98,6 +98,26 @@ pub fn select(coins: &[Coin], value: u64, fee: u64, allow_pending: bool) -> Resu
     }
     Ok(chosen)
 }
+/// Include discarded change in the review before any signing operation.
+pub fn reviewed_fee(coins: &[Coin], value: u64, fee: u64) -> Result<u64> {
+    let total = coins
+        .iter()
+        .try_fold(0u64, |sum, c| sum.checked_add(c.value))
+        .ok_or("Input total exceeds the amount limit.")?;
+    let need = value
+        .checked_add(fee)
+        .ok_or("Amount and fee exceed the limit.")?;
+    let change = total
+        .checked_sub(need)
+        .ok_or("Insufficient selected funds.")?;
+    if change < 1000 {
+        fee.checked_add(change)
+            .ok_or("Fee exceeds the amount limit.".into())
+    } else {
+        Ok(fee)
+    }
+}
+
 pub fn sign(
     secret: &[u8; 32],
     coins: &[Coin],
@@ -111,8 +131,11 @@ pub fn sign(
     let key = SigningKey::from_bytes(secret);
     let selected = select(coins, value, fee, true)?;
     let total: u64 = selected.iter().map(|c| c.value).sum();
+    if reviewed_fee(&selected, value, fee)? != fee {
+        return Err("Small change changes the fee. Prepare and review the transfer again.".into());
+    }
     let mut outputs = vec![Output { value, pkh: to }];
-    if total > value + fee {
+    if total - value - fee >= 1000 {
         outputs.push(Output {
             value: total - value - fee,
             pkh: requant_consensus::tx::pkh(&key.verifying_key().to_bytes()),
@@ -135,4 +158,42 @@ pub fn sign(
     tx.check_standalone(&net.chain_id)
         .map_err(|_| "The locally signed transfer failed validation.")?;
     Ok(tx)
+}
+
+#[cfg(test)]
+mod dust_tests {
+    use super::*;
+    #[test]
+    fn exact_fee_is_reviewed_and_stale_dust_reviews_cannot_sign() {
+        let secret = [7; 32];
+        let net = Network::test();
+        let recipient = requant_consensus::address::address(
+            &net,
+            &requant_consensus::tx::pkh(
+                &SigningKey::from_bytes(&[9; 32]).verifying_key().to_bytes(),
+            ),
+        );
+        for change in [0u64, 1, 999, 1000, 1001] {
+            let coin = Coin {
+                txid: "ab".repeat(32),
+                vout: 0,
+                value: 100000 + 2000 + change,
+                confirmed: true,
+                spendable: true,
+                coinbase: false,
+                height: Some(1),
+            };
+            let coins = vec![coin];
+            let fee = reviewed_fee(&coins, 100000, 2000).unwrap();
+            let tx = sign(&secret, &coins, &recipient, 100000, fee).unwrap();
+            assert_eq!(
+                coins[0].value - tx.outputs().iter().map(|o| o.value).sum::<u64>(),
+                fee
+            );
+            assert_eq!(tx.outputs().len(), if change >= 1000 { 2 } else { 1 });
+            if change > 0 && change < 1000 {
+                assert!(sign(&secret, &coins, &recipient, 100000, 2000).is_err());
+            }
+        }
+    }
 }

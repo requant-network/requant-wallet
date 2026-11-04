@@ -2,7 +2,10 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "wallet",
   "description": "Wallet window and user-selected encrypted backup files",
-  "windows": ["main"],
+  "windows": [
+    "main",
+    "verified-wallet"
+  ],
   "permissions": [
     "core:default",
     "dialog:allow-open",

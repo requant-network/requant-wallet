@@ -7,6 +7,7 @@ use requant_consensus::{
 };
 use requant_wallet_portable as wallet;
 use serde_json::{json, Value};
+use sha2::{Digest, Sha256};
 use zeroize::Zeroizing;
 
 fn hex32(s: &str) -> bool {
@@ -64,6 +65,33 @@ fn channel_message(d: &Value, owner: &str) -> Result<String> {
     }
     Ok(format!("ReCast channel v1\nNetwork: test\n{{\"id\":{},\"version\":{},\"slug\":{},\"name\":{},\"description\":{},\"language\":{},\"payout_address\":{}}}",quote(d,"id")?,version,quote(d,"slug")?,quote(d,"name")?,quote(d,"description")?,quote(d,"language")?,quote(d,"payout_address")?))
 }
+pub fn comparison_code(r: &Value) -> Result<String> {
+    let origin = field(r, "origin")?;
+    let id = field(r, "id")?;
+    let intent = field(r, "intent")?;
+    let expiry = r["expires_at"]
+        .as_u64()
+        .filter(|v| *v > 0 && *v < (1u64 << 53))
+        .ok_or("Invalid comparison expiry.")?;
+    if !hex32(id)
+        || r["network"] != "test"
+        || !matches!(intent, "login" | "channel")
+        || origin.len() > 255
+        || origin.chars().any(|c| c.is_whitespace())
+    {
+        return Err("Invalid wallet comparison request.".into());
+    }
+    let message = format!(
+        "ReCast pairing comparison v1\n{}\ntest\n{}\n{}\n{}",
+        origin, id, intent, expiry
+    );
+    let hash = Sha256::digest(message.as_bytes());
+    Ok(format!(
+        "{:06}",
+        u32::from_be_bytes(hash[..4].try_into().unwrap()) % 1_000_000
+    ))
+}
+
 pub fn approve(v: &Value) -> Result<Value> {
     let r = &v["request"];
     if serde_json::to_string(r)
@@ -96,6 +124,9 @@ pub fn approve(v: &Value) -> Result<Value> {
     let now = v["now"].as_u64().ok_or("Missing current time.")?;
     if expiry <= now || expiry > now + 330 {
         return Err("ReCast request expired. Connect again.".into());
+    }
+    if v["comparison_code"].as_str() != Some(comparison_code(r)?.as_str()) {
+        return Err("Enter the six-digit code shown in ReCast before approving.".into());
     }
     let text = field(v, "file")?;
     let password = field(v, "password")?;

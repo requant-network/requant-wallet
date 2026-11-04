@@ -19,3 +19,9 @@ wasm-bindgen = "=0.2.129"
 
 chacha20poly1305 = "=0.10.1"
 bitcoin = { version = "=0.32.102", default-features = false, features = ["std", "secp-recovery"] }
+
+sha2 = "=0.10.9"
+
+base64 = "=0.22.1"
+minisign-verify = "=0.3.0"
+serde = { version = "1", features = ["derive"] }

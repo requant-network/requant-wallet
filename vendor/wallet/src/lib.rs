@@ -24,6 +24,8 @@ pub struct Spendable {
 
 /// Default fee rate in atoms per byte, and the smallest fee the wallet pays.
 pub const DEFAULT_FEE_RATE: u64 = 5;
+/// Change below this threshold is added to the fee, matching upstream a72c57c.
+pub const DUST_CHANGE: u64 = 1_000;
 pub const MIN_FEE: u64 = 1000;
 /// Inputs per transaction (a node accepts transactions up to 100 kB; an input takes 132 bytes).
 pub const MAX_INPUTS: usize = 600;
@@ -101,10 +103,11 @@ pub fn plan_payment(
     }
     let mut outputs: Vec<Output> = payments.iter().map(|(to, v)| Output { value: *v, pkh: *to }).collect();
     let change = total - pay - fee;
-    if change > 0 {
+    if change >= DUST_CHANGE {
         outputs.push(Output { value: change, pkh: change_to });
+        return Ok((unsigned(&chosen, outputs), chosen, fee));
     }
-    Ok((unsigned(&chosen, outputs), chosen, fee))
+    Ok((unsigned(&chosen, outputs), chosen, total - pay))
 }
 
 /// [`plan_payment`] from one key, change back to it, signed. Returns the transaction and its fee.
@@ -150,7 +153,7 @@ pub fn build_sweep(
     Ok((signed(net, key, &chosen, outputs), sent, fee))
 }
 
-/// Pay `amount` to `to` with a fixed `fee` (kept for callers that set the fee themselves).
+/// Pay `amount` with at least `fee`; sub-threshold change is added to the fee.
 pub fn build_transfer(
     net: &Network,
     key: &SigningKey,
@@ -177,7 +180,7 @@ pub fn build_transfer(
         return Err(format!("insufficient funds: {} spendable, {} needed", format_amount(total), format_amount(need)));
     }
     let mut outputs = vec![Output { value: amount, pkh: *to }];
-    if total > need {
+    if total - need >= DUST_CHANGE {
         outputs.push(Output { value: total - need, pkh: owner_of(key) });
     }
     Ok(signed(net, key, &chosen, outputs))
@@ -199,7 +202,7 @@ mod tests {
         tx.check_standalone(&net.chain_id).unwrap();
         let Tx::Transfer { inputs, outputs } = &tx else { panic!() };
         assert_eq!(inputs.len(), 1);
-        assert_eq!(outputs.iter().map(|o| o.value).collect::<Vec<_>>(), [900, 50]);
+        assert_eq!(outputs.iter().map(|o| o.value).collect::<Vec<_>>(), [900]);
         assert!(build_transfer(&net, &key, &coins, &[9; 32], 1300, 1).is_err());
     }
 
@@ -264,8 +267,15 @@ use chacha20poly1305::{XChaCha20Poly1305, XNonce};
 const KEY_TAG: &str = "requant-key:1:argon2id";
 /// Argon2id cost: 64 MiB, 3 passes, 1 lane.
 const KDF: (u32, u32, u32) = (65536, 3, 1);
+/// Import ceilings match the existing native client; creation costs are unchanged.
+pub const MAX_KDF_MEMORY_KIB: u32 = 131072;
+pub const MAX_KDF_PASSES: u32 = 6;
+pub const MAX_KDF_LANES: u32 = 4;
 
 fn kdf(pass: &str, salt: &[u8], m: u32, t: u32, p: u32) -> Result<[u8; 32], &'static str> {
+    if m > MAX_KDF_MEMORY_KIB || t > MAX_KDF_PASSES || p > MAX_KDF_LANES {
+        return Err("unsupported key-derivation cost");
+    }
     let params = argon2::Params::new(m, t, p, Some(32)).map_err(|_| "bad key-derivation parameters")?;
     let mut out = [0u8; 32];
     argon2::Argon2::new(argon2::Algorithm::Argon2id, argon2::Version::V0x13, params)
@@ -383,4 +393,32 @@ pub mod tron;
 mod portable_hex {
  pub fn hex(v: &[u8]) -> String { hex::encode(v) }
  pub fn unhex(s: &str) -> Result<Vec<u8>, String> { hex::decode(s).map_err(|e|e.to_string()) }
+}
+
+#[cfg(test)]
+mod import_and_dust_limits {
+    use super::*;
+    #[test]
+    fn import_cost_is_rejected_before_argon2_allocation() {
+        for (m,t,p) in [(MAX_KDF_MEMORY_KIB+1,3,1),(65536,MAX_KDF_PASSES+1,1),(65536,3,MAX_KDF_LANES+1)] {
+            assert_eq!(kdf("fixture-password", &[1;16],m,t,p),Err("unsupported key-derivation cost"));
+        }
+    }
+    #[test]
+    fn dust_change_boundaries_preserve_payments_and_exact_fees() {
+        let key=SigningKey::from_bytes(&[5;32]);
+        let fee=fee_for(1,2,1);
+        for change in [0,1,999,1000,1001] {
+            let input=10000+fee+change;
+            let coins=[Spendable{op:OutPoint{txid:[3;32],vout:0},value:input,owner:owner_of(&key)}];
+            let (tx,_,paid)=plan_payment(&coins,&[([9;32],10000)],1,[8;32]).unwrap();
+            assert_eq!(tx.outputs()[0].value,10000);
+            assert_eq!(tx.outputs().len(),if change<DUST_CHANGE {1}else{2});
+            assert_eq!(input-tx.outputs().iter().map(|o|o.value).sum::<u64>(),paid);
+            assert_eq!(paid,fee+if change<DUST_CHANGE {change}else{0});
+            let legacy=build_transfer(&Network::regtest(),&key,&coins,&[9;32],10000,fee).unwrap();
+            assert_eq!(legacy.outputs().len(),tx.outputs().len());
+            assert_eq!(input-legacy.outputs().iter().map(|o|o.value).sum::<u64>(),paid);
+        }
+    }
 }

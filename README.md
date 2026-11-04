@@ -92,3 +92,5 @@ Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE). The vendored Re
 ## ReCast wallet sign-in
 
 Version 0.5.1 adds typed ReCast login and channel approvals in Website connections across web, native and extension UI. See [ReCast Connect](docs/RECAST_CONNECT.md) for the approval protocol, tests and release requirements.
+
+Security release preparation: [signed web and extension delivery](docs/SIGNED_RELEASES.md).

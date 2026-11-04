@@ -13,7 +13,7 @@ Version 0.4.0 bootstraps updates. Earlier desktop/Android/ZIP builds must be rep
 Run `.github/workflows/build.yml` and extension checks for the release commits. Download artifacts from these exact successful runs into a fresh directory (including `requant-web-wallet` and the extension ZIP). Inspect the builds and run their tests before signing.
 
 ```
-node scripts/prepare-update-release.mjs --input=/absolute/artifacts --output=/absolute/new-release --key=/absolute/private-wallet-updater.key
+node scripts/prepare-update-release.mjs --input=/absolute/artifacts --output=/absolute/new-release --key=/absolute/private-wallet-updater.key --commit=FULL_REVIEWED_SHA
 ```
 
 The private updater key is outside Git and remains local. CI does not receive it. Keep a secure backup; changing it breaks the installed updater trust chain. The public verification key is in `src-tauri/tauri.conf.json`; version binding is required. Never embed GitHub credentials in clients or make the repositories public for updates.
@@ -21,3 +21,5 @@ The private updater key is outside Git and remains local. CI does not receive it
 Upload the immutable release artifacts to `/downloads/wallet/v0.4.0-testnet/` (substitute the actual version), then publish `desktop.json`, `android.json` and `extension.json` atomically under `/updates/wallet/`. Update feeds must use `Cache-Control: no-store`, JSON content type and HTTPS. Do not serve them with immutable installer caching. Verify public artifact hashes and signatures before switching the feeds. Failed/incomplete builds must never replace a live feed.
 
 Deploy the matching web bundle without removing the downloads or updates directories. Keep its `sw.js`, `version.json` and HTML uncached at the HTTP layer. The worker caches only its fixed public asset list, with a complete revision kept together; RPC responses, encrypted backups and user keys are excluded. Never reuse a version path for different artifacts. Keep the app-data identifier and encrypted storage formats unchanged.
+
+Independent web/extension verification and the installed-client launch flow are documented in [Signed releases](SIGNED_RELEASES.md). A plain website service worker does not provide server-independent integrity.

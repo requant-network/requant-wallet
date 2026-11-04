@@ -34,6 +34,12 @@ export default function useWalletUpdates({
   async function install() {
     if (!ready || installing.current || state.current.blocked || fileDialogOpen)
       return;
+    if (await command<boolean>("verified_web_active")) {
+      setStatus(
+        "Close the verified web wallet before installing an application update.",
+      );
+      return;
+    }
     installing.current = true;
     setWorking(true);
     onInstalling(true);
