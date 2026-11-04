@@ -19,7 +19,7 @@ private key or password; reproduce with a new test wallet.
 - accepting a forged source transaction, HTLC, TRON contract or token, channel state or
   package that it should reject;
 - bypassing update-signature checks or installing an update during a protected flow;
-- in the Telegram Mini App: an export key or plaintext reaching the server, or one Telegram account
+- in existing installations of the retired native RQT Telegram Mini App: an export key or plaintext reaching the server, or one Telegram account
   reading another account's wallets;
 
 ## Scope notes

@@ -391,6 +391,7 @@ pub fn run() {
             full_wallet::full_state_load,
             full_wallet::full_state_save,
             full_wallet::portable_wallet,
+            full_wallet::full_recast_relay,
             full_wallet::full_wallet_rpc,
             full_wallet::full_wallet_protocol,
             full_wallet::share_full_address,

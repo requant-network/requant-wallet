@@ -1,3 +1,4 @@
+import RecastConnect from "./RecastConnect";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   ArrowUpRight,
@@ -36,6 +37,7 @@ import { rqt, short } from "../../src/amounts.mjs";
 import { platform, site } from "./platform";
 import { useWebUpdates } from "./updates";
 type View =
+  | "connections"
   | "wallet"
   | "send"
   | "receive"
@@ -58,6 +60,7 @@ type Modal =
   | null;
 const nav: { id: View; name: string; icon: typeof Wallet }[] = [
   { id: "wallet", name: "Wallet", icon: Wallet },
+  { id: "connections", name: "Website connections", icon: Globe },
   { id: "send", name: "Send RQT", icon: Send },
   { id: "addresses", name: "Addresses", icon: ContactRound },
   { id: "coins", name: "Coins", icon: Layers },
@@ -68,6 +71,10 @@ const nav: { id: View; name: string; icon: typeof Wallet }[] = [
   { id: "conditions", name: "Conditions", icon: ShieldCheck },
 ];
 const titles: Record<View, [string, string]> = {
+  connections: [
+    "Website connections",
+    "Review a ReCast sign-in or channel update before approving.",
+  ],
   wallet: ["Your wallet", "A clear view of your Requant testnet wallet."],
   send: ["Send RQT", "Send to one or more recipients. Review before signing."],
   receive: ["Receive RQT", "Share a receive address from your wallet."],
@@ -218,7 +225,9 @@ export default function App() {
         return "";
       }
     }),
-    [view, setView] = useState<View>("wallet");
+    [view, setView] = useState<View>(() =>
+      location.hash.startsWith("#recast=") ? "connections" : "wallet",
+    );
   const [snapshot, setSnapshot] = useState<api.Snapshot | null>(null),
     [node, setNode] = useState<any>(null),
     [error, setError] = useState(""),
@@ -308,7 +317,7 @@ export default function App() {
     !!offlineReview ||
     view === "send" ||
     view === "offline" ||
-    ["conditions", "channels", "packages"].includes(view) ||
+    ["connections", "conditions", "channels", "packages"].includes(view) ||
     !!password ||
     !!source;
   const walletUpdate = useWebUpdates(
@@ -482,7 +491,9 @@ export default function App() {
             );
           }
         }
-        setView("wallet");
+        setView(
+          location.hash.startsWith("#recast=") ? "connections" : "wallet",
+        );
       },
     );
   }
@@ -1197,7 +1208,11 @@ export default function App() {
                     setPhrase("");
                     setReveal(false);
                     reload();
-                    setView("wallet");
+                    setView(
+                      location.hash.startsWith("#recast=")
+                        ? "connections"
+                        : "wallet",
+                    );
                   })
                 }
               >
@@ -1828,6 +1843,9 @@ export default function App() {
                 )}
               </>
             )}
+            {view === "connections" && (
+              <RecastConnect wallet={current} reset={lockTick} />
+            )}
             {view === "channels" && (
               <Channels
                 wallet={current}
@@ -2191,6 +2209,7 @@ export default function App() {
             {[
               { id: "send", name: "Send RQT" },
               { id: "receive", name: "Receive RQT" },
+              { id: "connections", name: "Website connections" },
               { id: "addresses", name: "Addresses & deposit lists" },
               { id: "coins", name: "Coins & consolidation" },
               { id: "offline", name: "Offline signing" },

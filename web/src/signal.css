@@ -1657,3 +1657,5 @@ td > a {
     gap: 16px;
   }
 }
+
+.recast-value { overflow-wrap: anywhere; white-space: pre-wrap; }

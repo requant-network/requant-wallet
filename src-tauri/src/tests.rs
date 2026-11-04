@@ -49,6 +49,8 @@ fn fake_node(owner: &str) -> FakeNode {
                 thread::sleep(Duration::from_millis(5));
                 continue;
             };
+            // macOS accepted sockets inherit the listener's nonblocking flag.
+            stream.set_nonblocking(false).unwrap();
             stream
                 .set_read_timeout(Some(Duration::from_secs(5)))
                 .unwrap();

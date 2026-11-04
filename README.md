@@ -4,9 +4,9 @@ Native **RQT** wallets for Windows, macOS, Linux, Android, the web and the Chrom
 
 Requant testnet application for Windows, macOS, Linux and Android. English interface with the approved light Requant identity. iOS is outside this milestone.
 
-## Wallet 0.5.1
+## Wallet 0.5.2
 
-One interface and Requant wallet 0.5.0 portable core across web, Windows, macOS, Linux, Android, the browser extension's full wallet workspace.
+One interface and the pinned Requant wallet 0.10.0 portable core across web, Windows, macOS, Linux, Android and the browser extension's full wallet workspace.
 
 - Create and restore a 24-word HD wallet, encrypted backups, watch-only imports and legacy encrypted/plain key imports (plain keys are encrypted before storage).
 - Receive/change addresses, recovery scanning, address counts from 1 to 100,000, paged address lists and deposit-list exports.
@@ -88,3 +88,7 @@ Spending conditions: local 2-of-2, HTLC, delayed revocation and revocable HTLC b
 ## License
 
 Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE). The vendored Requant source in `vendor/` is Apache-2.0 as well; IBM Plex Sans is under the SIL Open Font License 1.1.
+
+## ReCast wallet sign-in
+
+Version 0.5.1 adds typed ReCast login and channel approvals in Website connections across web, native and extension UI. See [ReCast Connect](docs/RECAST_CONNECT.md) for the approval protocol, tests and release requirements.
