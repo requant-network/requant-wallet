@@ -20,7 +20,7 @@ An attacker controlling the server can freeze the newest available version; this
 
 ## Preparing a release
 
-Use one successful reviewed build, align native/web/extension versions, and verify the source commit and pinned public key before signing. `scripts/prepare-update-release.mjs` now requires `--commit=FULL_REVIEWED_SHA` and publishes a signed `extension.json` envelope plus `Requant-Web-Wallet_VERSION_testnet.rqweb`. The former unsigned extension feed is not a fallback. Existing native feeds retain their own platform signature handling.
+Use one successful reviewed build, align native/web/extension versions, and verify the source commit and pinned public key before signing. `scripts/prepare-update-release.mjs` now requires `--commit=FULL_REVIEWED_SHA` and `--extension-commit=FULL_REVIEWED_EXTENSION_SHA` and publishes a signed `extension.json` envelope plus `Requant-Web-Wallet_VERSION_testnet.rqweb`. The former unsigned extension feed is not a fallback. Existing native feeds retain their own platform signature handling.
 
 For a web-only build, the desktop wallet repository provides:
 

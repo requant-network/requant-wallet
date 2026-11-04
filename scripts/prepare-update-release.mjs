@@ -9,7 +9,7 @@ import {
   writeFileSync,
   existsSync,
 } from "node:fs";
-import { resolve, join, basename } from "node:path";
+import { resolve, join, basename, dirname } from "node:path";
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
 
@@ -25,10 +25,11 @@ if (
   !args["--input"] ||
   !args["--output"] ||
   !args["--key"] ||
-  !/^[a-f0-9]{40}$/.test(args["--commit"] || "")
+  !/^[a-f0-9]{40}$/.test(args["--commit"] || "") ||
+  !/^[a-f0-9]{40}$/.test(args["--extension-commit"] || "")
 )
   throw new Error(
-    "Use --input=DIR --output=DIR --key=PRIVATE_KEY_PATH --commit=REVIEWED_SHA",
+    "Use --input=DIR --output=DIR --key=PRIVATE_KEY_PATH --commit=REVIEWED_SHA --extension-commit=REVIEWED_EXTENSION_SHA",
   );
 const version = JSON.parse(readFileSync("package.json", "utf8")).version;
 const input = resolve(args["--input"]),
@@ -52,6 +53,24 @@ function one(predicate) {
     throw new Error(`Expected exactly one artifact; found ${found.length}.`);
   return found[0];
 }
+const extensionSource = one(
+  (f) =>
+    basename(f) === `Requant-Wallet-Extension_${version}_chromium-testnet.zip`,
+);
+const extensionBuild = JSON.parse(
+  readFileSync(join(dirname(extensionSource), "build-manifest.json"), "utf8"),
+);
+if (
+  extensionBuild.product !== "Requant Wallet Extension" ||
+  extensionBuild.network !== "testnet" ||
+  extensionBuild.version !== version ||
+  extensionBuild.sourceCommit !== args["--extension-commit"] ||
+  extensionBuild.sha256 !==
+    createHash("sha256").update(readFileSync(extensionSource)).digest("hex")
+)
+  throw new Error(
+    "Extension CI provenance or ZIP hash mismatch. Nothing was signed.",
+  );
 mkdirSync(output, { recursive: true });
 const files = [];
 function copy(source, name, signed = false) {
@@ -131,11 +150,7 @@ const android = {
   ...copy(androidSource, `Requant-Wallet_${version}_android-arm64.apk`),
 };
 copy(
-  one(
-    (f) =>
-      basename(f) ===
-      `Requant-Wallet-Extension_${version}_chromium-testnet.zip`,
-  ),
+  extensionSource,
   `Requant-Wallet-Extension_${version}_chromium-testnet.zip`,
 );
 const webDir = one((f) => f.endsWith("/requant-web-wallet/index.html"));
@@ -171,7 +186,7 @@ try {
     directory: staging,
     product: "extension",
     version,
-    commit: args["--commit"],
+    commit: args["--extension-commit"],
     key: args["--key"],
     output: join(output, "extension.json"),
   });
