@@ -10,11 +10,13 @@
     "test": "node --test test/*.test.mjs gateway/test/*.test.mjs",
     "test:core": "cargo test -p requant-wallet-core",
     "check": "npm run build && npm test",
-    "format": "prettier --write src scripts test gateway .github package.json vite.config.ts tsconfig.json src-tauri/*.json src-tauri/capabilities/*.json",
+    "format": "prettier --write src scripts test e2e playwright.config.mjs gateway .github package.json vite.config.ts tsconfig.json src-tauri/*.json src-tauri/capabilities/*.json",
     "build:web-core": "node scripts/build-browser-core.mjs",
     "build:web": "npm run build:web-core && tsc -p tsconfig.web.json --noEmit && vite build --config vite.web.config.ts && node scripts/package-web.mjs",
     "dev:web": "vite --config vite.web.config.ts",
-    "test:web-core": "cargo test -p requant-browser-core -p requant-wallet-portable"
+    "test:web-core": "cargo test -p requant-browser-core -p requant-wallet-portable",
+    "test:e2e": "playwright test",
+    "test:e2e:prepare": "cargo test --locked -p requant-browser-core --test browser export_public_unfunded_integration_fixture"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.11.0",
@@ -30,6 +32,7 @@
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
+    "@playwright/test": "1.64.1",
     "@tauri-apps/cli": "^2.11.0",
     "@types/qrcode": "^1.5.5",
     "@types/react": "^19.2.0",

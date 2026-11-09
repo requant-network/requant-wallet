@@ -204,7 +204,7 @@ fn export_public_unfunded_integration_fixture() {
     std::fs::create_dir_all(&root).unwrap();
     std::fs::write(
         root.join("full-test-fixture.json"),
-        json!({"file":file,"request":request,"password":PASS}).to_string(),
+        json!({"file":file,"request":request,"password":PASS,"genesis":hex::encode(requant_consensus::block::genesis(&Network::test()).id(&Network::test()))}).to_string(),
     )
     .unwrap();
 }

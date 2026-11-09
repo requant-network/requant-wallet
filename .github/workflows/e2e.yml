@@ -1,0 +1,39 @@
+name: Wallet browser E2E
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with: { node-version: "24", cache: npm }
+      - uses: dtolnay/rust-toolchain@stable
+        with: { toolchain: "1.99.0", targets: wasm32-unknown-unknown }
+      - uses: Swatinem/rust-cache@v2
+      - run: npm ci
+      - run: cargo install wasm-bindgen-cli --version 0.2.129 --locked
+      - run: npm run test:e2e:prepare
+      - run: npm run build:web
+      - run: npm test
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: wallet-browser-e2e
+          path: |
+            .wallet-test/report/
+            .wallet-test/e2e/
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 7

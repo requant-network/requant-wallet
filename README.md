@@ -53,6 +53,31 @@ npm run tauri -- android build --ci --apk --target aarch64
 
 Android requires Java 21, SDK 36, NDK 28.2, aarch64-linux-android and the signing environment described below. The preparation script applies release signing, Requant icons, disables OS cloud backup of wallet data and prohibits cleartext network traffic.
 
+## Browser end-to-end tests
+
+```sh
+npm ci
+npm run test:e2e:prepare
+npm run build:web
+npx playwright install chromium
+npm run test:e2e
+```
+
+Use the pinned Rust toolchain, its `wasm32-unknown-unknown` target and
+`wasm-bindgen-cli` 0.2.129. Playwright serves the production web build and uses
+the actual React UI, WASM signing worker and IndexedDB. Tests cover creation,
+encrypted-backup recovery in a clean context, wrong passwords, watch-only
+imports, storage migration, reviewed transfers, spent inputs and durable unknown
+broadcasts without automatic resubmission. The signed transaction must already
+be stored when the mocked broadcast receives it.
+
+All node responses and broadcasts are isolated fixtures; remote network requests
+are blocked. Test wallets are disposable and must never receive funds. These
+tests qualify the web target, not native Tauri windows or Android devices.
+`Wallet browser E2E` runs on main pushes, pull requests and manual dispatch.
+Reports, failure screenshots and traces are retained for seven days; local output
+stays under ignored `.wallet-test/`.
+
 ## Builds and signing
 
 `.github/workflows/build.yml` checks the wallet core/gateway and builds Windows x64 NSIS, universal macOS DMG, Linux x64 AppImage/Debian and Android ARM64 APK. Build artifacts are retained for 30 days; access follows the repository visibility. A successful installer build does not establish device/runtime testing on that platform.
